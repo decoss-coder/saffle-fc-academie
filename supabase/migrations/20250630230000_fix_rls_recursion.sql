@@ -15,6 +15,7 @@ grant execute on function public.get_my_role() to authenticated;
 
 -- Profiles
 drop policy if exists "Admins can view all profiles" on public.profiles;
+drop policy if exists "Staff can view all profiles" on public.profiles;
 create policy "Staff can view all profiles"
   on public.profiles for select
   using (public.get_my_role() in ('admin', 'president', 'treasurer'));
