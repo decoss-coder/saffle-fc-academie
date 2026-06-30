@@ -1,6 +1,5 @@
--- Import des membres SAFFLE FF Académie CI (staff + joueurs U9-U10)
--- Exécuter dans Supabase SQL Editor après les migrations.
--- Idempotent : peut être relancé sans doublons.
+-- Import des membres SAFFLE FF Académie CI
+-- Groupes : U12 (petits), U16 (grands), Équipe A (liste à venir — vide pour l'instant)
 
 -- ─── BUREAU & STAFF ───────────────────────────────────────────────
 insert into public.phone_registry (phone_normalized, role, full_name, position_title)
@@ -28,9 +27,7 @@ set
   position_title = excluded.position_title,
   updated_at = now();
 
--- ─── JOUEURS GROUPE U9-U10 ────────────────────────────────────────
--- Téléphone = contact parent/tuteur (connexion parent sur la plateforme)
-
+-- ─── JOUEURS U12 (petits) ─────────────────────────────────────────
 do $$
 declare
   v_matricule text;
@@ -64,45 +61,31 @@ begin
       select 1 from public.players p
       where p.first_name = rec.first_name
         and p.last_name = rec.last_name
-        and p.team = 'U9-U10'
+        and p.team = 'U12'
     ) then
       continue;
     end if;
 
     v_counter := v_counter + 1;
     v_matricule := 'SFA-2026-' || lpad(v_counter::text, 3, '0');
-
     while exists (select 1 from public.players where matricule = v_matricule) loop
       v_counter := v_counter + 1;
       v_matricule := 'SFA-2026-' || lpad(v_counter::text, 3, '0');
     end loop;
 
     insert into public.players (
-      matricule,
-      first_name,
-      last_name,
-      birth_date,
-      gender,
-      category,
-      team,
-      phone,
-      guardian_name
+      matricule, first_name, last_name, birth_date, gender,
+      category, team, phone, guardian_name
     ) values (
-      v_matricule,
-      rec.first_name,
-      rec.last_name,
-      '2016-01-15',
-      'M',
-      'u10',
-      'U9-U10',
-      rec.phone,
+      v_matricule, rec.first_name, rec.last_name,
+      '2014-01-15', 'M', 'u12', 'U12', rec.phone,
       rec.last_name || ' ' || rec.first_name
     );
   end loop;
 end;
 $$;
 
--- ─── JOUEURS ÉQUIPE A (U14-U15 + transferts depuis petits) ─────────
+-- ─── JOUEURS U16 (grands) ─────────────────────────────────────────
 do $$
 declare
   v_matricule text;
@@ -143,47 +126,35 @@ begin
       select 1 from public.players p
       where p.first_name = rec.first_name
         and p.last_name = rec.last_name
-        and p.team = 'Équipe A'
+        and p.team = 'U16'
     ) then
       continue;
     end if;
 
     v_counter := v_counter + 1;
     v_matricule := 'SFA-2026-' || lpad(v_counter::text, 3, '0');
-
     while exists (select 1 from public.players where matricule = v_matricule) loop
       v_counter := v_counter + 1;
       v_matricule := 'SFA-2026-' || lpad(v_counter::text, 3, '0');
     end loop;
 
     insert into public.players (
-      matricule,
-      first_name,
-      last_name,
-      birth_date,
-      gender,
-      category,
-      team,
-      phone,
-      guardian_name
+      matricule, first_name, last_name, birth_date, gender,
+      category, team, phone, guardian_name
     ) values (
-      v_matricule,
-      rec.first_name,
-      rec.last_name,
-      '2010-06-15',
-      rec.gender,
-      'team_a',
-      'Équipe A',
-      rec.phone,
+      v_matricule, rec.first_name, rec.last_name,
+      '2010-01-15', rec.gender, 'u16', 'U16', rec.phone,
       rec.last_name || ' ' || rec.first_name
     );
   end loop;
 end;
 $$;
 
--- Vérification rapide
-select 'phone_registry' as table_name, count(*) as total from public.phone_registry
-union all
-select 'players U9-U10', count(*) from public.players where team = 'U9-U10'
-union all
-select 'players Équipe A', count(*) from public.players where team = 'Équipe A';
+-- Équipe A : réservée — ajouter via seed_equipe_a.sql quand la liste sera disponible
+
+-- Vérification
+select team, count(*) as total
+from public.players
+where not is_archived
+group by team
+order by team;

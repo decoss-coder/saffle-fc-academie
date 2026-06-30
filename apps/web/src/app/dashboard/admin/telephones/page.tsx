@@ -32,7 +32,7 @@ export default async function AdminTelephonesPage() {
       <div className="rounded-2xl border border-green-200 bg-green-50 p-5 text-sm text-green-800">
         <p className="font-medium text-green-900">Import en masse</p>
         <p className="mt-1">
-          Pour enregistrer tout le bureau et les joueurs U9-U10 d&apos;un coup,
+          Pour enregistrer le bureau, les joueurs U12 et U16 d&apos;un coup,
           exécutez le script{" "}
           <code className="rounded bg-white px-1">supabase/scripts/seed_saffle_members.sql</code>{" "}
           dans Supabase SQL Editor.

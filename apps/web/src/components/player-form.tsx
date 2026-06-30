@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { PLAYER_CATEGORIES } from "@/lib/players/constants";
+import { PLAYER_CATEGORIES, PLAYER_GROUPS } from "@/lib/players/constants";
 import type { PlayerFormState } from "@/app/dashboard/joueurs/actions";
 
 type PlayerFormProps = {
@@ -38,7 +38,18 @@ export function PlayerForm({ action }: PlayerFormProps) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm text-green-800">Catégorie</label>
+            <label className="mb-1 block text-sm text-green-800">Groupe / équipe</label>
+            <select name="team_group" required className={inputClass} defaultValue="">
+              <option value="">Choisir</option>
+              {PLAYER_GROUPS.map((g) => (
+                <option key={g.team} value={g.team}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm text-green-800">Catégorie FFF</label>
             <select name="category" required className={inputClass}>
               <option value="">Choisir</option>
               {PLAYER_CATEGORIES.map((item) => (
@@ -48,7 +59,6 @@ export function PlayerForm({ action }: PlayerFormProps) {
               ))}
             </select>
           </div>
-          <Field label="Équipe" name="team" placeholder="Ex. U15 A" />
         </div>
       </section>
 

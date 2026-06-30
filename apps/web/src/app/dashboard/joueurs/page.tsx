@@ -12,6 +12,7 @@ export default async function JoueursPage() {
     .from("players")
     .select("id, matricule, first_name, last_name, category, team, birth_date, is_archived")
     .eq("is_archived", false)
+    .order("team", { ascending: true })
     .order("last_name", { ascending: true });
 
   const canManage = canManagePlayers(profile.role);

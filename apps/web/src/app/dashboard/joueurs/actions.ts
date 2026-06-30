@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth";
 import type { PlayerCategory } from "@/lib/players/constants";
+import { PLAYER_GROUPS as GROUPS } from "@/lib/players/constants";
 
 export type PlayerFormState = {
   error?: string;
@@ -35,9 +36,14 @@ export async function createPlayer(
   const lastName = String(formData.get("last_name") ?? "").trim();
   const birthDate = String(formData.get("birth_date") ?? "");
   const gender = String(formData.get("gender") ?? "");
-  const category = String(formData.get("category") ?? "") as PlayerCategory;
+  const teamGroup = String(formData.get("team_group") ?? "").trim();
+  const groupDef = GROUPS.find((g) => g.team === teamGroup);
+  let category = String(formData.get("category") ?? "") as PlayerCategory;
+  if (!category && groupDef) {
+    category = groupDef.category;
+  }
 
-  if (!firstName || !lastName || !birthDate || !gender || !category) {
+  if (!firstName || !lastName || !birthDate || !gender || !category || !teamGroup) {
     return { error: "Remplissez tous les champs obligatoires." };
   }
 
@@ -52,7 +58,7 @@ export async function createPlayer(
       birth_date: birthDate,
       gender,
       category,
-      team: String(formData.get("team") ?? "").trim() || null,
+      team: teamGroup,
       father_name: String(formData.get("father_name") ?? "").trim() || null,
       mother_name: String(formData.get("mother_name") ?? "").trim() || null,
       guardian_name: String(formData.get("guardian_name") ?? "").trim() || null,

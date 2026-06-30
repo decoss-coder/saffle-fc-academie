@@ -15,6 +15,18 @@ export const PLAYER_CATEGORIES = [
 
 export type PlayerCategory = (typeof PLAYER_CATEGORIES)[number]["value"];
 
+/** Groupes effectifs du club (formation + équipes compétition) */
+export const PLAYER_GROUPS = [
+  { team: "U12", category: "u12" as const, label: "U12 — Petits" },
+  { team: "U16", category: "u16" as const, label: "U16 — Grands" },
+  { team: "Équipe A", category: "team_a" as const, label: "Équipe A" },
+  { team: "Équipe B", category: "team_b" as const, label: "Équipe B" },
+] as const;
+
+export function groupForCategory(category: string) {
+  return PLAYER_GROUPS.find((g) => g.category === category)?.label ?? category;
+}
+
 export function formatCategory(category: string) {
   return (
     PLAYER_CATEGORIES.find((item) => item.value === category)?.label ?? category

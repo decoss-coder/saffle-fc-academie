@@ -24,18 +24,23 @@ export const CLUB = {
 
 export const TEAMS = [
   {
+    name: "U12",
+    description: "Petits — catégorie de formation.",
+    image: CLUB.assets.formation,
+  },
+  {
+    name: "U16",
+    description: "Grands — catégorie de formation.",
+    image: CLUB.assets.formation,
+  },
+  {
     name: "Équipe A",
-    description: "Effectif senior — compétitions et matchs officiels.",
+    description: "Effectif senior — compétitions officielles (liste à venir).",
     image: CLUB.assets.equipeA,
   },
   {
     name: "Équipe B",
-    description: "Effectif élargi — préparation et rotation.",
+    description: "Effectif élargi — préparation et rotation (à venir).",
     image: CLUB.assets.equipeB,
-  },
-  {
-    name: "Formation",
-    description: "Catégories jeunes — U10 à U18, futurs talents de Sinfra.",
-    image: CLUB.assets.formation,
   },
 ] as const;

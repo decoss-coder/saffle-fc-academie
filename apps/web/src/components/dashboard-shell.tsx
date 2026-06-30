@@ -45,7 +45,7 @@ function buildNavItems(userRole: string) {
   }
 
   if (canManagePhones(userRole)) {
-    items.push({ href: "/dashboard/admin/telephones", label: "Accès téléphone" });
+    items.push({ href: "/dashboard/admin/telephones", label: "Membres" });
   }
 
   return items;
