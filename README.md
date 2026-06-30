@@ -62,21 +62,34 @@ npm run dev:web
 npm run dev:mobile
 ```
 
-## Déploiement Vercel
+## Déploiement
 
-1. Importer le dépôt GitHub sur [vercel.com/new](https://vercel.com/new)
-2. Définir le **Root Directory** sur `apps/web`
-3. Ajouter les variables d'environnement Supabase dans Vercel
-4. Déployer
+| Service | URL |
+|---------|-----|
+| **Web (production)** | https://saffle-fc-academie.vercel.app |
+| **GitHub** | https://github.com/decoss-coder/saffle-fc-academie |
+| **Vercel Dashboard** | https://vercel.com/decoss-coders-projects/saffle-fc-academie |
 
-Ou via CLI :
+Le déploiement automatique est activé à chaque push sur `main`.
 
-```bash
-cd apps/web
-vercel link
-vercel env pull .env.local
-vercel --prod
-```
+## Configuration Supabase (requis pour l'auth)
+
+1. Créer un projet sur [supabase.com/dashboard](https://supabase.com/dashboard)
+2. Exécuter la migration SQL : `supabase/migrations/20250629210000_initial_schema.sql`
+3. Copier les clés API (Settings → API)
+4. Ajouter dans **Vercel** → Project → Settings → Environment Variables :
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. Localement :
+   ```bash
+   cp .env.example apps/web/.env.local
+   cp .env.example apps/mobile/.env
+   ```
+6. Dans Supabase → Authentication → URL Configuration, ajouter :
+   - Site URL : `https://saffle-fc-academie.vercel.app`
+   - Redirect URL : `https://saffle-fc-academie.vercel.app/auth/callback`
+
+## Déploiement Vercel (déjà configuré)
 
 ## Déploiement mobile
 
