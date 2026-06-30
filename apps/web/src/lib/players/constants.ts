@@ -1,4 +1,5 @@
 export const PLAYER_CATEGORIES = [
+  { value: "u9", label: "U9" },
   { value: "u10", label: "U10" },
   { value: "u11", label: "U11" },
   { value: "u12", label: "U12" },

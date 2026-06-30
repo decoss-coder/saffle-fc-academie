@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { PhoneRegistryState } from "./actions";
+import { STAFF_ROLES } from "@/lib/roles";
 
 const initialState: PhoneRegistryState = {};
 
@@ -19,12 +20,15 @@ export function StaffPhoneForm({ action }: StaffPhoneFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className="space-y-4 rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+    <form
+      action={formAction}
+      className="space-y-4 rounded-2xl border border-green-200 bg-white p-6 shadow-sm"
+    >
       <h2 className="text-lg font-medium text-green-900">
-        Enregistrer un numéro staff
+        Enregistrer un membre staff
       </h2>
       <p className="text-sm text-green-700">
-        Coach, trésorier, admin… Ces personnes activeront leur compte avec ce numéro.
+        Bureau, coach, trésorier… La personne activera son compte avec ce numéro.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -53,19 +57,31 @@ export function StaffPhoneForm({ action }: StaffPhoneFormProps) {
             placeholder="07 07 20 18 33"
           />
         </div>
-        <div className="sm:col-span-2">
+        <div>
+          <label
+            htmlFor="position_title"
+            className="mb-1 block text-sm text-green-800"
+          >
+            Poste / fonction
+          </label>
+          <input
+            id="position_title"
+            name="position_title"
+            className={inputClass}
+            placeholder="Ex. Vice-président, Entraîneur U10"
+          />
+        </div>
+        <div>
           <label htmlFor="role" className="mb-1 block text-sm text-green-800">
-            Rôle
+            Droits sur la plateforme
           </label>
           <select id="role" name="role" required className={inputClass}>
             <option value="">Choisir</option>
-            <option value="admin">Administrateur</option>
-            <option value="president">Président</option>
-            <option value="board">Bureau</option>
-            <option value="treasurer">Trésorier</option>
-            <option value="coach">Coach</option>
-            <option value="communication">Communication</option>
-            <option value="logistics">Logistique</option>
+            {STAFF_ROLES.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -86,7 +102,7 @@ export function StaffPhoneForm({ action }: StaffPhoneFormProps) {
         disabled={pending}
         className="rounded-full bg-green-800 px-6 py-3 text-sm font-medium text-white transition hover:bg-green-700 disabled:opacity-60"
       >
-        {pending ? "Enregistrement..." : "Enregistrer le numéro"}
+        {pending ? "Enregistrement..." : "Enregistrer le membre"}
       </button>
     </form>
   );

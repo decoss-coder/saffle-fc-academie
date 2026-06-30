@@ -1,7 +1,15 @@
-/** Normalise un numéro ivoirien vers le format +225XXXXXXXXXX */
+/** Normalise un numéro vers le format international (+...) */
 export function normalizePhone(raw: string): string | null {
   const digits = raw.replace(/\D/g, "");
   if (!digits) return null;
+
+  if (
+    digits.length >= 11 &&
+    !digits.startsWith("225") &&
+    !digits.startsWith("0")
+  ) {
+    return `+${digits}`;
+  }
 
   let normalized = digits;
 

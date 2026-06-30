@@ -4,21 +4,14 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/phone";
+import { STAFF_ROLES } from "@/lib/roles";
 
 export type PhoneRegistryState = {
   error?: string;
   success?: string;
 };
 
-const STAFF_ROLES = [
-  "admin",
-  "president",
-  "board",
-  "treasurer",
-  "coach",
-  "communication",
-  "logistics",
-] as const;
+const STAFF_ROLE_VALUES = STAFF_ROLES.map((r) => r.value);
 
 export async function registerStaffPhone(
   _prevState: PhoneRegistryState,
@@ -29,10 +22,15 @@ export async function registerStaffPhone(
 
   const phone = normalizePhone(String(formData.get("phone") ?? ""));
   const fullName = String(formData.get("full_name") ?? "").trim();
+  const positionTitle = String(formData.get("position_title") ?? "").trim() || null;
   const role = String(formData.get("role") ?? "");
 
-  if (!phone || !fullName || !STAFF_ROLES.includes(role as (typeof STAFF_ROLES)[number])) {
-    return { error: "Remplissez tous les champs correctement." };
+  if (
+    !phone ||
+    !fullName ||
+    !STAFF_ROLE_VALUES.includes(role as (typeof STAFF_ROLE_VALUES)[number])
+  ) {
+    return { error: "Remplissez tous les champs obligatoires." };
   }
 
   const { error } = await supabase.from("phone_registry").upsert(
@@ -40,6 +38,7 @@ export async function registerStaffPhone(
       phone_normalized: phone,
       role,
       full_name: fullName,
+      position_title: positionTitle,
       player_id: null,
     },
     { onConflict: "phone_normalized" },

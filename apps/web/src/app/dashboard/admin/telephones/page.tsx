@@ -2,6 +2,7 @@ import { DashboardShell, requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { CLUB } from "@/lib/club";
 import { formatPhoneDisplay } from "@/lib/phone";
+import { formatRole } from "@/lib/roles";
 import { registerStaffPhone } from "./actions";
 import { StaffPhoneForm } from "./staff-phone-form";
 
@@ -11,16 +12,36 @@ export default async function AdminTelephonesPage() {
 
   const { data: entries } = await supabase
     .from("phone_registry")
-    .select("phone_normalized, role, full_name, linked_user_id, created_at")
+    .select(
+      "phone_normalized, role, full_name, position_title, linked_user_id, created_at",
+    )
     .order("created_at", { ascending: false });
+
+  const { count: playerCount } = await supabase
+    .from("players")
+    .select("*", { count: "exact", head: true })
+    .eq("is_archived", false);
 
   return (
     <DashboardShell
-      title="Numéros autorisés"
-      subtitle={`Gestion des accès — ${CLUB.name}`}
+      title="Membres & accès"
+      subtitle={`Bureau, staff et téléphones — ${CLUB.name}`}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
+      <div className="rounded-2xl border border-green-200 bg-green-50 p-5 text-sm text-green-800">
+        <p className="font-medium text-green-900">Import en masse</p>
+        <p className="mt-1">
+          Pour enregistrer tout le bureau et les joueurs U9-U10 d&apos;un coup,
+          exécutez le script{" "}
+          <code className="rounded bg-white px-1">supabase/scripts/seed_saffle_members.sql</code>{" "}
+          dans Supabase SQL Editor.
+        </p>
+        <p className="mt-2 text-green-700">
+          {playerCount ?? 0} joueur(s) actif(s) en base actuellement.
+        </p>
+      </div>
+
       <StaffPhoneForm action={registerStaffPhone} />
 
       <section className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
@@ -29,7 +50,7 @@ export default async function AdminTelephonesPage() {
             <tr>
               <th className="px-4 py-3 font-medium">Téléphone</th>
               <th className="px-4 py-3 font-medium">Nom</th>
-              <th className="px-4 py-3 font-medium">Rôle</th>
+              <th className="px-4 py-3 font-medium">Poste</th>
               <th className="px-4 py-3 font-medium">Statut</th>
             </tr>
           </thead>
@@ -37,8 +58,8 @@ export default async function AdminTelephonesPage() {
             {!entries?.length ? (
               <tr>
                 <td colSpan={4} className="px-4 py-8 text-center text-green-700">
-                  Aucun numéro enregistré. Les parents sont ajoutés automatiquement
-                  via la fiche joueur.
+                  Aucun membre enregistré. Lancez le script d&apos;import ou
+                  ajoutez un membre ci-dessus.
                 </td>
               </tr>
             ) : (
@@ -48,12 +69,16 @@ export default async function AdminTelephonesPage() {
                     {formatPhoneDisplay(entry.phone_normalized)}
                   </td>
                   <td className="px-4 py-3">{entry.full_name ?? "—"}</td>
-                  <td className="px-4 py-3 capitalize">{entry.role}</td>
+                  <td className="px-4 py-3 text-green-800">
+                    {formatRole(entry.role, entry.position_title)}
+                  </td>
                   <td className="px-4 py-3">
                     {entry.linked_user_id ? (
                       <span className="text-green-700">Compte activé</span>
                     ) : (
-                      <span className="text-amber-700">En attente d&apos;activation</span>
+                      <span className="text-amber-700">
+                        En attente d&apos;activation
+                      </span>
                     )}
                   </td>
                 </tr>
