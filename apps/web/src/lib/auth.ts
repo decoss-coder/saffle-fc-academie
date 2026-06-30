@@ -61,6 +61,14 @@ export function canManageClub(role: string) {
   return MANAGE_PLAYERS_ROLES.has(role) || TREASURER_ROLES.has(role);
 }
 
+export function canViewBudget(role: string) {
+  return ["admin", "president", "treasurer", "board"].includes(role);
+}
+
+export function canManageBudget(role: string) {
+  return TREASURER_ROLES.has(role);
+}
+
 export function canApproveWelfare(role: string) {
   return ADMIN_ROLES.has(role);
 }
