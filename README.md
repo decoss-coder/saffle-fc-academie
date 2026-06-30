@@ -79,10 +79,9 @@ Le déploiement automatique est activé à chaque push sur `main`.
 **Projet :** `rfmilqrkpairxyaluzni`  
 **URL :** `https://rfmilqrkpairxyaluzni.supabase.co`
 
-1. Exécuter les migrations SQL (dans l'ordre) via **SQL Editor** :
-   - `supabase/migrations/20250629210000_initial_schema.sql`
-   - `supabase/migrations/20250630220000_players_write_policies.sql`
-   - `supabase/migrations/20250630230000_fix_rls_recursion.sql` ← **important si erreur RLS**
+1. Exécuter **une seule fois** dans **SQL Editor** :
+   → `supabase/scripts/repair_policies.sql`
+   *(corrige RLS + politiques joueurs, sans erreur si déjà appliqué)*
 2. **Authentication → URL Configuration** :
    - Site URL : `https://saffle-fc-academie.vercel.app`
    - Redirect : `https://saffle-fc-academie.vercel.app/auth/callback`
