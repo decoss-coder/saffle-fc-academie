@@ -23,6 +23,7 @@ type DashboardShellProps = {
 function buildNavItems(userRole: string) {
   const items: { href: string; label: string }[] = [
     { href: "/dashboard", label: "Accueil" },
+    { href: "/dashboard/notifications", label: "Notifications" },
   ];
 
   if (isParentRole(userRole) || canUploadDocuments(userRole)) {

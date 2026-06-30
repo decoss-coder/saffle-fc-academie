@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateConvocationAttendance } from "@/app/dashboard/convocations/actions";
 import { RESPONSE_STATUS_LABELS } from "@/lib/convocations/constants";
+import { PERFORMANCE_LEVELS } from "@/lib/notifications/constants";
 import type { ConvocationFormState } from "@/app/dashboard/convocations/actions";
 
 const initialState: ConvocationFormState = {};
@@ -10,6 +11,7 @@ const initialState: ConvocationFormState = {};
 type AttendanceEntry = {
   id: string;
   response: string;
+  performanceLevel?: string | null;
   playerName: string;
 };
 
@@ -44,10 +46,12 @@ export function ConvocationAttendanceForm({
   return (
     <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
       <h2 className="text-lg font-medium text-green-900">
-        Présences à l&apos;entraînement
+        Présences et performances
       </h2>
       <p className="mt-1 text-sm text-green-700">
-        Indiquez la présence réelle de chaque joueur après la séance.
+        Après la séance, indiquez la présence et la performance. Les parents et
+        admins seront notifiés en cas d&apos;absence, de retard ou de performance
+        remarquable.
       </p>
 
       <form action={formAction} className="mt-4 space-y-3">
@@ -56,25 +60,47 @@ export function ConvocationAttendanceForm({
         {entries.map((entry) => (
           <div
             key={entry.id}
-            className="flex flex-col gap-2 rounded-xl border border-green-100 bg-green-50/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+            className="rounded-xl border border-green-100 bg-green-50/50 p-3"
           >
-            <div>
-              <p className="font-medium text-green-900">{entry.playerName}</p>
-              <p className="text-xs text-green-600">
-                Actuel : {RESPONSE_STATUS_LABELS[entry.response] ?? entry.response}
-              </p>
+            <p className="font-medium text-green-900">{entry.playerName}</p>
+            <p className="mb-3 text-xs text-green-600">
+              Actuel : {RESPONSE_STATUS_LABELS[entry.response] ?? entry.response}
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs text-green-700">
+                  Présence
+                </label>
+                <select
+                  name={`response_${entry.id}`}
+                  defaultValue={entry.response}
+                  className="w-full rounded-xl border border-green-200 bg-white px-3 py-2 text-sm text-green-950"
+                >
+                  {coachOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-green-700">
+                  Performance
+                </label>
+                <select
+                  name={`performance_${entry.id}`}
+                  defaultValue={entry.performanceLevel ?? ""}
+                  className="w-full rounded-xl border border-green-200 bg-white px-3 py-2 text-sm text-green-950"
+                >
+                  <option value="">—</option>
+                  {PERFORMANCE_LEVELS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <select
-              name={`response_${entry.id}`}
-              defaultValue={entry.response}
-              className="rounded-xl border border-green-200 bg-white px-3 py-2 text-sm text-green-950"
-            >
-              {coachOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
         ))}
 

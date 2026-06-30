@@ -32,7 +32,7 @@ export default async function ConvocationDetailPage({
     .from("convocation_entries")
     .select(
       `
-      id, response, response_comment, responded_at,
+      id, response, performance_level, response_comment, responded_at,
       players ( first_name, last_name, matricule )
     `,
     )
@@ -48,6 +48,7 @@ export default async function ConvocationDetailPage({
       return {
         id: entry.id,
         response: entry.response,
+        performanceLevel: entry.performance_level,
         playerName: player
           ? `${player.last_name} ${player.first_name}`
           : "Joueur",

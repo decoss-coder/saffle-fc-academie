@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireConvocationStaff, requireUser } from "@/lib/auth";
+import { notifyPlayerStakeholders } from "@/lib/notifications/actions";
+import { unwrapRelation } from "@/lib/supabase/relation";
 
 export type ConvocationFormState = { error?: string; success?: string };
 
@@ -103,7 +105,7 @@ export async function updateConvocationAttendance(
 
   const { data: convocation } = await supabase
     .from("convocations")
-    .select("id, event_type")
+    .select("id, event_type, title, event_date")
     .eq("id", convocationId)
     .maybeSingle();
 
@@ -113,7 +115,12 @@ export async function updateConvocationAttendance(
 
   const { data: entries } = await supabase
     .from("convocation_entries")
-    .select("id")
+    .select(
+      `
+      id, response, performance_level, player_id,
+      players ( first_name, last_name )
+    `,
+    )
     .eq("convocation_id", convocationId);
 
   const allowed = new Set([
@@ -123,15 +130,38 @@ export async function updateConvocationAttendance(
     "late",
     "absent",
   ]);
+  const allowedPerformance = new Set([
+    "excellent",
+    "satisfactory",
+    "needs_improvement",
+  ]);
+
+  const sessionDate = new Intl.DateTimeFormat("fr-CI", {
+    day: "2-digit",
+    month: "long",
+  }).format(new Date(convocation.event_date));
 
   for (const entry of entries ?? []) {
     const response = String(formData.get(`response_${entry.id}`) ?? "").trim();
+    const performanceRaw = String(
+      formData.get(`performance_${entry.id}`) ?? "",
+    ).trim();
+    const performance = allowedPerformance.has(performanceRaw)
+      ? performanceRaw
+      : null;
+
     if (!response || !allowed.has(response)) continue;
+
+    const player = unwrapRelation(entry.players);
+    const playerName = player
+      ? `${player.last_name} ${player.first_name}`
+      : "Joueur";
 
     const { error } = await supabase
       .from("convocation_entries")
       .update({
         response,
+        performance_level: performance,
         responded_at: new Date().toISOString(),
         responded_by: user.id,
       })
@@ -140,9 +170,62 @@ export async function updateConvocationAttendance(
     if (error) {
       return { error: "Impossible d'enregistrer les présences." };
     }
+
+    const presencesLink = `/dashboard/joueurs/${entry.player_id}/presences`;
+
+    if (response === "absent" && entry.response !== "absent") {
+      await notifyPlayerStakeholders({
+        playerId: entry.player_id,
+        type: "absence",
+        title: `Absence — ${playerName}`,
+        body: `${playerName} a été marqué absent à l'entraînement « ${convocation.title} » (${sessionDate}).`,
+        link: presencesLink,
+        excludeUserId: user.id,
+      });
+    }
+
+    if (response === "late" && entry.response !== "late") {
+      await notifyPlayerStakeholders({
+        playerId: entry.player_id,
+        type: "late",
+        title: `Retard — ${playerName}`,
+        body: `${playerName} a été marqué en retard à l'entraînement « ${convocation.title} » (${sessionDate}).`,
+        link: presencesLink,
+        excludeUserId: user.id,
+      });
+    }
+
+    if (
+      performance === "needs_improvement" &&
+      entry.performance_level !== "needs_improvement"
+    ) {
+      await notifyPlayerStakeholders({
+        playerId: entry.player_id,
+        type: "performance",
+        title: `Performance à améliorer — ${playerName}`,
+        body: `Le coach a indiqué que la performance de ${playerName} doit être améliorée lors de « ${convocation.title} » (${sessionDate}).`,
+        link: presencesLink,
+        excludeUserId: user.id,
+      });
+    }
+
+    if (
+      performance === "excellent" &&
+      entry.performance_level !== "excellent"
+    ) {
+      await notifyPlayerStakeholders({
+        playerId: entry.player_id,
+        type: "performance",
+        title: `Belle performance — ${playerName}`,
+        body: `${playerName} a eu une excellente performance à l'entraînement « ${convocation.title} » (${sessionDate}).`,
+        link: presencesLink,
+        excludeUserId: user.id,
+      });
+    }
   }
 
   revalidatePath(`/dashboard/convocations/${convocationId}`);
   revalidatePath("/dashboard/joueurs");
-  return { success: "Présences enregistrées." };
+  revalidatePath("/dashboard/notifications");
+  return { success: "Présences enregistrées. Notifications envoyées si nécessaire." };
 }

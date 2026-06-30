@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { DashboardShell, requireUser, canManagePlayers } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { formatCategory, PLAYER_GROUPS } from "@/lib/players/constants";
+import { PLAYER_GROUPS } from "@/lib/players/constants";
 import {
   summarizeAttendanceStatus,
   summarizePaymentStatus,
@@ -195,7 +195,6 @@ export default async function JoueursPage({
                   <th className="px-4 py-3 font-medium">Photo</th>
                   <th className="px-4 py-3 font-medium">Matricule</th>
                   <th className="px-4 py-3 font-medium">Joueur</th>
-                  <th className="px-4 py-3 font-medium">Catégorie</th>
                   <th className="px-4 py-3 font-medium">Cotisation</th>
                   <th className="px-4 py-3 font-medium">Dernière séance</th>
                   <th className="px-4 py-3 font-medium"></th>
@@ -227,13 +226,16 @@ export default async function JoueursPage({
                         {player.last_name} {player.first_name}
                       </td>
                       <td className="px-4 py-3">
-                        {formatCategory(player.category)}
+                        <PlayerStatusBadge
+                          status={paymentStatus}
+                          href={`/dashboard/joueurs/${player.id}/cotisations`}
+                        />
                       </td>
                       <td className="px-4 py-3">
-                        <PlayerStatusBadge status={paymentStatus} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <PlayerStatusBadge status={attendanceStatus} />
+                        <PlayerStatusBadge
+                          status={attendanceStatus}
+                          href={`/dashboard/joueurs/${player.id}/presences`}
+                        />
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Link
