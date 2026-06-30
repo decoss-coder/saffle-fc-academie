@@ -10,13 +10,14 @@ type PlayerFormProps = {
     prevState: PlayerFormState,
     formData: FormData,
   ) => Promise<PlayerFormState>;
+  defaultTeamGroup?: string;
 };
 
 const initialState: PlayerFormState = {};
 const inputClass =
   "w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none ring-green-600 focus:ring-2";
 
-export function PlayerForm({ action }: PlayerFormProps) {
+export function PlayerForm({ action, defaultTeamGroup }: PlayerFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
@@ -39,7 +40,12 @@ export function PlayerForm({ action }: PlayerFormProps) {
           </div>
           <div>
             <label className="mb-1 block text-sm text-green-800">Groupe / équipe</label>
-            <select name="team_group" required className={inputClass} defaultValue="">
+            <select
+              name="team_group"
+              required
+              className={inputClass}
+              defaultValue={defaultTeamGroup ?? ""}
+            >
               <option value="">Choisir</option>
               {PLAYER_GROUPS.map((g) => (
                 <option key={g.team} value={g.team}>
