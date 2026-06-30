@@ -13,37 +13,33 @@ type PlayerFormProps = {
 };
 
 const initialState: PlayerFormState = {};
+const inputClass =
+  "w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none ring-green-600 focus:ring-2";
 
 export function PlayerForm({ action }: PlayerFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="space-y-6">
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <h2 className="text-lg font-medium">Informations obligatoires</h2>
+      <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-medium text-green-900">
+          Informations obligatoires
+        </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Prénom(s)" name="first_name" required />
           <Field label="Nom" name="last_name" required />
           <Field label="Date de naissance" name="birth_date" type="date" required />
           <div>
-            <label className="mb-1 block text-sm text-zinc-400">Sexe</label>
-            <select
-              name="gender"
-              required
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm"
-            >
+            <label className="mb-1 block text-sm text-green-800">Sexe</label>
+            <select name="gender" required className={inputClass}>
               <option value="">Choisir</option>
               <option value="M">Masculin</option>
               <option value="F">Féminin</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm text-zinc-400">Catégorie</label>
-            <select
-              name="category"
-              required
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm"
-            >
+            <label className="mb-1 block text-sm text-green-800">Catégorie</label>
+            <select name="category" required className={inputClass}>
               <option value="">Choisir</option>
               {PLAYER_CATEGORIES.map((item) => (
                 <option key={item.value} value={item.value}>
@@ -56,8 +52,10 @@ export function PlayerForm({ action }: PlayerFormProps) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <h2 className="text-lg font-medium">Informations complémentaires</h2>
+      <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-medium text-green-900">
+          Informations complémentaires
+        </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Nom du père" name="father_name" />
           <Field label="Nom de la mère" name="mother_name" />
@@ -71,7 +69,7 @@ export function PlayerForm({ action }: PlayerFormProps) {
       </section>
 
       {state.error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <p className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
           {state.error}
         </p>
       )}
@@ -80,13 +78,13 @@ export function PlayerForm({ action }: PlayerFormProps) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-medium text-zinc-950 transition hover:bg-emerald-400 disabled:opacity-60"
+          className="rounded-full bg-green-800 px-6 py-3 text-sm font-medium text-white transition hover:bg-green-700 disabled:opacity-60"
         >
           {pending ? "Enregistrement..." : "Enregistrer le joueur"}
         </button>
         <Link
           href="/dashboard/joueurs"
-          className="rounded-full border border-zinc-700 px-6 py-3 text-sm transition hover:border-zinc-500"
+          className="rounded-full border border-green-300 px-6 py-3 text-sm text-green-800 transition hover:bg-green-50"
         >
           Annuler
         </Link>
@@ -112,7 +110,7 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <label htmlFor={name} className="mb-1 block text-sm text-zinc-400">
+      <label htmlFor={name} className="mb-1 block text-sm text-green-800">
         {label}
       </label>
       <input
@@ -121,7 +119,7 @@ function Field({
         type={type}
         required={required}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none ring-emerald-500 focus:ring-2"
+        className={inputClass}
       />
     </div>
   );

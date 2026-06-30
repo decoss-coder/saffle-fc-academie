@@ -11,12 +11,12 @@ export default function SignupPage() {
     <AuthLayout title="Créer un compte" subtitle="Inscription">
       {!configured ? (
         <div className="space-y-4">
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-green-700">
             Configuration Supabase en cours. Réessayez dans quelques minutes.
           </p>
           <Link
             href="/"
-            className="inline-flex rounded-full border border-zinc-700 px-5 py-2 text-sm transition hover:border-zinc-500"
+            className="inline-flex rounded-full border border-green-300 px-5 py-2 text-sm text-green-800 transition hover:bg-green-50"
           >
             Retour à l&apos;accueil
           </Link>

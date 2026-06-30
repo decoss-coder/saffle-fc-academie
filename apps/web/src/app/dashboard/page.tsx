@@ -34,10 +34,10 @@ export default async function DashboardPage() {
           <Link
             key={item.title}
             href={item.href}
-            className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 transition hover:border-zinc-700"
+            className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm transition hover:border-green-400 hover:bg-green-50"
           >
-            <h2 className="text-lg font-medium">{item.title}</h2>
-            <p className="mt-2 text-sm text-zinc-400">{item.status}</p>
+            <h2 className="text-lg font-medium text-green-900">{item.title}</h2>
+            <p className="mt-2 text-sm text-green-700">{item.status}</p>
           </Link>
         ))}
       </section>

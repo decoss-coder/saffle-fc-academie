@@ -2,8 +2,10 @@
 
 :root {
   --club-green: #14532d;
-  --background: #09090b;
-  --foreground: #fafafa;
+  --club-green-light: #166534;
+  --club-green-muted: #15803d;
+  --background: #ffffff;
+  --foreground: #14532d;
 }
 
 @theme inline {

@@ -6,6 +6,7 @@ type ClubLogoProps = {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
   href?: string;
+  light?: boolean;
 };
 
 const sizes = {
@@ -18,8 +19,11 @@ export function ClubLogo({
   size = "md",
   showText = true,
   href = "/",
+  light = false,
 }: ClubLogoProps) {
   const s = sizes[size];
+  const titleClass = light ? "text-white" : "text-green-900";
+  const subClass = light ? "text-green-100" : "text-green-700";
 
   const content = (
     <div className="flex items-center gap-3">
@@ -28,17 +32,15 @@ export function ClubLogo({
         alt={CLUB.name}
         width={s.img}
         height={s.img}
-        className="rounded-full object-cover ring-2 ring-emerald-500/30"
+        className="rounded-full object-cover ring-2 ring-green-600/30"
         priority
       />
       {showText && (
         <div>
-          <p
-            className={`font-semibold leading-tight text-white ${s.title}`}
-          >
+          <p className={`font-semibold leading-tight ${titleClass} ${s.title}`}>
             {CLUB.name}
           </p>
-          <p className={`text-zinc-400 ${s.sub}`}>{CLUB.location}</p>
+          <p className={`${subClass} ${s.sub}`}>{CLUB.location}</p>
         </div>
       )}
     </div>

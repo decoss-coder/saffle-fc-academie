@@ -16,12 +16,12 @@ export default async function LoginPage({
     <AuthLayout title="Accéder à la plateforme" subtitle="Connexion">
       {!configured ? (
         <div className="space-y-4">
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-green-700">
             Configuration Supabase en cours. Réessayez dans quelques minutes.
           </p>
           <Link
             href="/"
-            className="inline-flex rounded-full border border-zinc-700 px-5 py-2 text-sm transition hover:border-zinc-500"
+            className="inline-flex rounded-full border border-green-300 px-5 py-2 text-sm text-green-800 transition hover:bg-green-50"
           >
             Retour à l&apos;accueil
           </Link>
@@ -29,7 +29,7 @@ export default async function LoginPage({
       ) : (
         <>
           {params.error === "auth_callback_failed" && (
-            <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <p className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
               La confirmation du lien a échoué. Réessayez.
             </p>
           )}

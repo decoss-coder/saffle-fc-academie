@@ -21,7 +21,7 @@ export function AuthForm({ mode, action }: AuthFormProps) {
     <form action={formAction} className="space-y-4">
       {mode === "signup" && (
         <div>
-          <label htmlFor="full_name" className="mb-1 block text-sm text-zinc-400">
+          <label htmlFor="full_name" className="mb-1 block text-sm text-green-800">
             Nom complet
           </label>
           <input
@@ -29,14 +29,14 @@ export function AuthForm({ mode, action }: AuthFormProps) {
             name="full_name"
             type="text"
             required
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none ring-emerald-500 focus:ring-2"
+            className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none ring-green-600 focus:ring-2"
             placeholder="Jean Dupont"
           />
         </div>
       )}
 
       <div>
-        <label htmlFor="email" className="mb-1 block text-sm text-zinc-400">
+        <label htmlFor="email" className="mb-1 block text-sm text-green-800">
           Email
         </label>
         <input
@@ -45,13 +45,13 @@ export function AuthForm({ mode, action }: AuthFormProps) {
           type="email"
           required
           autoComplete="email"
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none ring-emerald-500 focus:ring-2"
+          className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none ring-green-600 focus:ring-2"
           placeholder="vous@exemple.com"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm text-zinc-400">
+        <label htmlFor="password" className="mb-1 block text-sm text-green-800">
           Mot de passe
         </label>
         <input
@@ -61,19 +61,19 @@ export function AuthForm({ mode, action }: AuthFormProps) {
           required
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           minLength={mode === "signup" ? 8 : undefined}
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm outline-none ring-emerald-500 focus:ring-2"
+          className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none ring-green-600 focus:ring-2"
           placeholder="••••••••"
         />
       </div>
 
       {state.error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <p className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
           {state.error}
         </p>
       )}
 
       {state.success && (
-        <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+        <p className="rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
           {state.success}
         </p>
       )}
@@ -81,7 +81,7 @@ export function AuthForm({ mode, action }: AuthFormProps) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-full bg-emerald-500 py-3 text-sm font-medium text-zinc-950 transition hover:bg-emerald-400 disabled:opacity-60"
+        className="w-full rounded-full bg-green-800 py-3 text-sm font-medium text-white transition hover:bg-green-700 disabled:opacity-60"
       >
         {pending
           ? "Chargement..."
@@ -90,18 +90,18 @@ export function AuthForm({ mode, action }: AuthFormProps) {
             : "Créer un compte"}
       </button>
 
-      <p className="text-center text-sm text-zinc-400">
+      <p className="text-center text-sm text-green-700">
         {mode === "login" ? (
           <>
             Pas encore de compte ?{" "}
-            <Link href="/signup" className="text-emerald-400 hover:underline">
+            <Link href="/signup" className="font-medium text-green-800 hover:underline">
               S&apos;inscrire
             </Link>
           </>
         ) : (
           <>
             Déjà inscrit ?{" "}
-            <Link href="/login" className="text-emerald-400 hover:underline">
+            <Link href="/login" className="font-medium text-green-800 hover:underline">
               Se connecter
             </Link>
           </>
