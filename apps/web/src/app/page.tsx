@@ -44,7 +44,7 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 mx-auto flex min-h-[86svh] w-full max-w-7xl flex-col px-5 pt-24 sm:px-8 sm:pt-28">
-          <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#071c16]/78 backdrop-blur-md">
+          <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#071c16]/88 backdrop-blur-md">
             <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
               <Link href="/" className="flex min-w-0 items-center gap-3">
                 <Image
@@ -55,41 +55,66 @@ export default function Home() {
                   className="rounded-2xl bg-white object-cover p-1 shadow-lg shadow-black/20 ring-1 ring-white/20"
                 />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold tracking-tight">
+                  <p className="truncate text-sm font-semibold uppercase tracking-[0.08em]">
                     {CLUB.shortName}
                   </p>
-                  <p className="text-xs text-emerald-50/65">{CLUB.location}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d3ad45]">
+                    Académie CI
+                  </p>
                 </div>
               </Link>
-              <nav className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/8 p-1 backdrop-blur md:flex">
+              <div className="flex items-center gap-3">
                 <Link
-                  href="#equipes"
-                  className="rounded-full px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
+                  href="/login"
+                  className="hidden min-h-12 items-center justify-center rounded-md border border-[#d3ad45]/38 px-8 text-sm font-semibold uppercase tracking-[0.22em] text-[#d3ad45] transition hover:bg-[#d3ad45] hover:text-[#071c16] sm:flex"
                 >
-                  Équipes
+                  Se connecter
                 </Link>
-                <Link
-                  href="#actualites"
-                  className="rounded-full px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
-                >
-                  Actualités
-                </Link>
-              </nav>
+                <details className="group relative">
+                  <summary className="flex min-h-12 w-14 cursor-pointer list-none items-center justify-center rounded-md border border-white/14 text-2xl text-white transition hover:bg-white/10 [&::-webkit-details-marker]:hidden">
+                    <span className="group-open:hidden">≡</span>
+                    <span className="hidden group-open:block">×</span>
+                  </summary>
+                  <div className="absolute right-0 top-[calc(100%+0.75rem)] w-[min(86vw,28rem)] rounded-2xl border border-white/10 bg-[#020806]/96 p-5 shadow-2xl shadow-black/40">
+                    <nav className="space-y-1">
+                      {[
+                        ["Équipes", "#equipes"],
+                        ["Actualités", "#actualites"],
+                        ["Contact", "#contact"],
+                      ].map(([label, href]) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          className="block border-b border-white/8 py-4 text-sm font-semibold uppercase tracking-[0.24em] text-white/70 transition hover:text-[#d3ad45]"
+                        >
+                          {label}
+                        </Link>
+                      ))}
+                    </nav>
+                    <Link
+                      href="/activer"
+                      className="mt-5 flex min-h-12 items-center justify-center rounded-md bg-[#d3ad45] px-5 text-sm font-semibold uppercase tracking-[0.22em] text-[#071c16] transition hover:bg-[#e4c464]"
+                    >
+                      Activer mon compte
+                    </Link>
+                  </div>
+                </details>
+              </div>
             </div>
           </header>
 
           <div className="flex flex-1 items-center py-8 lg:py-6">
             <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-100/70">
-                Centre de formation de football
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#d3ad45]">
+                Sinfra · Côte d&apos;Ivoire · Académie de football
               </p>
-              <h1 className="mt-5 max-w-4xl text-5xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
-                {CLUB.name}
+              <h1 className="mt-5 max-w-4xl text-5xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+                Forger les <span className="text-[#d3ad45]">champions</span>{" "}
+                de demain
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-emerald-50/78 sm:text-lg">
-                À {CLUB.city}, l&apos;académie organise le terrain, les familles et
-                l&apos;administration dans une même plateforme : joueurs, convocations,
-                documents et paiements Wave.
+                Centre de formation de football d&apos;élite à Sinfra.
+                Développement technique, tactique et humain des jeunes talents.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
