@@ -74,24 +74,29 @@ npm run dev:mobile
 
 Le déploiement automatique est activé à chaque push sur `main`.
 
-## Configuration Supabase (requis pour l'auth)
+## Configuration Supabase
 
-1. Créer un projet sur [supabase.com/dashboard](https://supabase.com/dashboard)
-2. Exécuter les migrations SQL (dans l'ordre) :
+**Projet :** `rfmilqrkpairxyaluzni`  
+**URL :** `https://rfmilqrkpairxyaluzni.supabase.co`
+
+1. Exécuter les migrations SQL (dans l'ordre) via **SQL Editor** :
    - `supabase/migrations/20250629210000_initial_schema.sql`
    - `supabase/migrations/20250630220000_players_write_policies.sql`
-3. Copier les clés API (Settings → API)
-4. Ajouter dans **Vercel** → Project → Settings → Environment Variables :
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. Localement :
-   ```bash
-   cp .env.example apps/web/.env.local
-   cp .env.example apps/mobile/.env
-   ```
-6. Dans Supabase → Authentication → URL Configuration, ajouter :
+   - `supabase/migrations/20250630230000_fix_rls_recursion.sql` ← **important si erreur RLS**
+2. **Authentication → URL Configuration** :
    - Site URL : `https://saffle-fc-academie.vercel.app`
-   - Redirect URL : `https://saffle-fc-academie.vercel.app/auth/callback`
+   - Redirect : `https://saffle-fc-academie.vercel.app/auth/callback`
+3. Variables déjà configurées sur Vercel (`NEXT_PUBLIC_SUPABASE_*`)
+4. Localement : `apps/web/.env.local` et `apps/mobile/.env`
+
+### CLI Supabase (sur votre machine)
+
+```bash
+supabase login
+cd "SAFFLE FC Académie"
+supabase link --project-ref rfmilqrkpairxyaluzni
+supabase db push
+```
 
 ## Déploiement Vercel (déjà configuré)
 
