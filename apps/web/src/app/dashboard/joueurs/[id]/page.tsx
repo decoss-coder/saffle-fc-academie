@@ -11,6 +11,7 @@ import {
   formatDate,
   formatGender,
 } from "@/lib/players/constants";
+import { PlayerDocumentsList } from "@/components/player-documents-list";
 import { archivePlayer } from "@/app/dashboard/joueurs/actions";
 
 function display(value: string | number | null | undefined) {
@@ -38,6 +39,14 @@ export default async function JoueurDetailPage({
   }
 
   const canManage = canManagePlayers(profile.role);
+
+  const { data: documents } = await supabase
+    .from("player_documents")
+    .select(
+      "id, player_id, document_type, file_name, file_path, file_size, status, admin_note, created_at, reviewed_at",
+    )
+    .eq("player_id", id)
+    .order("created_at", { ascending: false });
 
   const sections = [
     {
@@ -141,6 +150,16 @@ export default async function JoueurDetailPage({
           </section>
         ))}
       </div>
+
+      <section className="pt-2">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-green-700">
+          Documents déposés
+        </h2>
+        <PlayerDocumentsList
+          documents={documents ?? []}
+          canReview={canManage}
+        />
+      </section>
 
       {canManage && !player.is_archived && (
         <form action={archivePlayer} className="pt-6">

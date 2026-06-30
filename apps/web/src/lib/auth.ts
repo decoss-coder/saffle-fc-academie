@@ -39,6 +39,7 @@ const ADMIN_ROLES = new Set(["admin", "president"]);
 const TREASURER_ROLES = new Set(["admin", "president", "treasurer"]);
 const CONVOCATION_ROLES = new Set(["admin", "president", "coach"]);
 const PARENT_ROLES = new Set(["parent"]);
+const PLAYER_ACCOUNT_ROLES = new Set(["player_formation", "player_team_a"]);
 
 export function canManagePlayers(role: string) {
   return MANAGE_PLAYERS_ROLES.has(role);
@@ -58,6 +59,22 @@ export function canManageConvocations(role: string) {
 
 export function isParentRole(role: string) {
   return PARENT_ROLES.has(role);
+}
+
+export function isPlayerAccountRole(role: string) {
+  return PLAYER_ACCOUNT_ROLES.has(role);
+}
+
+export function canUploadDocuments(role: string) {
+  return isParentRole(role) || isPlayerAccountRole(role);
+}
+
+export async function requireDocumentUploader() {
+  const session = await requireUser();
+  if (!canUploadDocuments(session.profile.role)) {
+    redirect("/dashboard");
+  }
+  return session;
 }
 
 export async function requireAdmin() {

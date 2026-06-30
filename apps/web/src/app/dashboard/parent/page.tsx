@@ -61,6 +61,12 @@ export default async function ParentHomePage() {
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
+                  href="/dashboard/mes-documents"
+                  className="rounded-full border border-green-300 px-4 py-2 text-sm text-green-800 hover:bg-green-50"
+                >
+                  Documents
+                </Link>
+                <Link
                   href="/dashboard/parent/convocations"
                   className="rounded-full border border-green-300 px-4 py-2 text-sm text-green-800 hover:bg-green-50"
                 >

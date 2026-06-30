@@ -7,6 +7,7 @@ import {
   canManagePayments,
   canManagePhones,
   canManagePlayers,
+  canUploadDocuments,
   isParentRole,
 } from "@/lib/auth";
 
@@ -24,6 +25,12 @@ function buildNavItems(userRole: string) {
     { href: "/dashboard", label: "Accueil" },
   ];
 
+  if (isParentRole(userRole) || canUploadDocuments(userRole)) {
+    items.push(
+      { href: "/dashboard/mes-documents", label: "Documents" },
+    );
+  }
+
   if (isParentRole(userRole)) {
     items.push(
       { href: "/dashboard/parent", label: "Mes enfants" },
@@ -33,7 +40,10 @@ function buildNavItems(userRole: string) {
   }
 
   if (canManagePlayers(userRole)) {
-    items.push({ href: "/dashboard/joueurs", label: "Joueurs" });
+    items.push(
+      { href: "/dashboard/joueurs", label: "Joueurs" },
+      { href: "/dashboard/documents", label: "Documents" },
+    );
   }
 
   if (canManageConvocations(userRole)) {
