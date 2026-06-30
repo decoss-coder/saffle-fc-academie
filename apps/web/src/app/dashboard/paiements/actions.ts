@@ -10,23 +10,38 @@ import {
 } from "@/lib/auth";
 import { createWaveCheckout, getAppBaseUrl } from "@/lib/wave/client";
 import { MIN_PAYMENT_FCFA } from "@/lib/payments/constants";
+import { PLAYER_GROUPS } from "@/lib/players/constants";
 
 export type PaymentFormState = { error?: string; success?: string };
 
-export async function createPlayerDue(
+export async function createGroupDue(
   _prev: PaymentFormState,
   formData: FormData,
 ): Promise<PaymentFormState> {
+  const { user } = await requireUser();
   await requireTreasurer();
   const supabase = await createClient();
 
-  const playerId = String(formData.get("player_id") ?? "");
+  const teamGroup = String(formData.get("team_group") ?? "").trim();
   const label = String(formData.get("label") ?? "").trim();
   const amount = Number(formData.get("amount_due") ?? 0);
   const dueDate = String(formData.get("due_date") ?? "") || null;
 
-  if (!playerId || !label || amount < MIN_PAYMENT_FCFA) {
-    return { error: "Joueur, libellé et montant (min. 100 FCFA) requis." };
+  const validTeam = PLAYER_GROUPS.some((g) => g.team === teamGroup);
+  if (!validTeam || !label || amount < MIN_PAYMENT_FCFA) {
+    return {
+      error: "Groupe, libellé et montant (min. 100 FCFA) requis.",
+    };
+  }
+
+  const { data: players } = await supabase
+    .from("players")
+    .select("id")
+    .eq("team", teamGroup)
+    .eq("is_archived", false);
+
+  if (!players?.length) {
+    return { error: `Aucun joueur actif dans ${teamGroup}.` };
   }
 
   const { data: season } = await supabase
@@ -35,21 +50,28 @@ export async function createPlayerDue(
     .eq("is_active", true)
     .maybeSingle();
 
-  const { error } = await supabase.from("player_dues").insert({
-    player_id: playerId,
+  const rows = players.map((player) => ({
+    player_id: player.id,
     season_id: season?.id ?? null,
     due_type: "cotisation",
     label,
     amount_due: amount,
     due_date: dueDate,
-    created_by: (await requireUser()).user.id,
-  });
+    created_by: user.id,
+  }));
 
-  if (error) return { error: "Impossible de créer la cotisation." };
+  const { error } = await supabase.from("player_dues").insert(rows);
+
+  if (error) {
+    return { error: "Impossible de créer les cotisations." };
+  }
 
   revalidatePath("/dashboard/paiements");
   revalidatePath("/dashboard/parent/paiements");
-  return { success: "Cotisation créée." };
+  revalidatePath("/dashboard/joueurs");
+  return {
+    success: `${players.length} cotisation(s) créée(s) pour ${teamGroup} — « ${label} ».`,
+  };
 }
 
 export async function initiateWavePayment(formData: FormData) {
