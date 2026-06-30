@@ -43,37 +43,39 @@ export default function Home() {
           <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#f5f7f2] via-[#f5f7f2]/10 to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-[86svh] w-full max-w-7xl flex-col px-5 sm:px-8">
-          <header className="flex items-center justify-between gap-4 py-5 sm:py-7">
-            <Link href="/" className="flex min-w-0 items-center gap-3">
-              <Image
-                src={CLUB.assets.logo}
-                alt={CLUB.name}
-                width={48}
-                height={48}
-                className="rounded-2xl bg-white object-cover p-1 shadow-lg shadow-black/20 ring-1 ring-white/20"
-              />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold tracking-tight">
-                  {CLUB.shortName}
-                </p>
-                <p className="text-xs text-emerald-50/65">{CLUB.location}</p>
-              </div>
-            </Link>
-            <nav className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/8 p-1 backdrop-blur md:flex">
-              <Link
-                href="#equipes"
-                className="rounded-full px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
-              >
-                Équipes
+        <div className="relative z-10 mx-auto flex min-h-[86svh] w-full max-w-7xl flex-col px-5 pt-24 sm:px-8 sm:pt-28">
+          <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#071c16]/78 backdrop-blur-md">
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
+              <Link href="/" className="flex min-w-0 items-center gap-3">
+                <Image
+                  src={CLUB.assets.logo}
+                  alt={CLUB.name}
+                  width={48}
+                  height={48}
+                  className="rounded-2xl bg-white object-cover p-1 shadow-lg shadow-black/20 ring-1 ring-white/20"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold tracking-tight">
+                    {CLUB.shortName}
+                  </p>
+                  <p className="text-xs text-emerald-50/65">{CLUB.location}</p>
+                </div>
               </Link>
-              <Link
-                href="#actualites"
-                className="rounded-full px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
-              >
-                Actualités
-              </Link>
-            </nav>
+              <nav className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/8 p-1 backdrop-blur md:flex">
+                <Link
+                  href="#equipes"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
+                >
+                  Équipes
+                </Link>
+                <Link
+                  href="#actualites"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
+                >
+                  Actualités
+                </Link>
+              </nav>
+            </div>
           </header>
 
           <div className="flex flex-1 items-center py-8 lg:py-6">
