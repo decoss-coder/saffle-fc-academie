@@ -1,29 +1,23 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
-import { signIn } from "@/app/auth/actions";
+import { signUp } from "@/app/auth/actions";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const params = await searchParams;
+export default function SignupPage() {
   const configured = isSupabaseConfigured();
 
   return (
     <div className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8">
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-400">
-          Connexion
+          Inscription
         </p>
-        <h1 className="mt-2 text-2xl font-semibold">Accéder à la plateforme</h1>
+        <h1 className="mt-2 text-2xl font-semibold">Créer un compte</h1>
 
         {!configured ? (
           <div className="mt-6 space-y-4">
             <p className="text-sm text-zinc-400">
-              Supabase n&apos;est pas encore configuré. Ajoutez les variables
-              d&apos;environnement dans Vercel et localement.
+              Supabase n&apos;est pas encore configuré.
             </p>
             <Link
               href="/"
@@ -34,12 +28,7 @@ export default async function LoginPage({
           </div>
         ) : (
           <div className="mt-6">
-            {params.error === "auth_callback_failed" && (
-              <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                La confirmation du lien a échoué. Réessayez.
-              </p>
-            )}
-            <AuthForm mode="login" action={signIn} />
+            <AuthForm mode="signup" action={signUp} />
           </div>
         )}
       </div>

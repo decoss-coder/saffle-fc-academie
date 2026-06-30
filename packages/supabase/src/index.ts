@@ -10,15 +10,12 @@ export type UserRole =
   | "communication"
   | "logistics";
 
-export type AppConfig = {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-};
+export type { Database } from "./database.types";
 
 export function createSupabaseConfig(
   supabaseUrl: string | undefined,
   supabaseAnonKey: string | undefined,
-): AppConfig {
+): { supabaseUrl: string; supabaseAnonKey: string } {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
       "Variables Supabase manquantes. Définissez l'URL et la clé anon du projet.",

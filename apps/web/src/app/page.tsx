@@ -21,6 +21,12 @@ export default function Home() {
             <h1 className="text-2xl font-semibold">Académie</h1>
           </div>
           <Link
+            href="/signup"
+            className="rounded-full border border-zinc-700 px-5 py-2 text-sm transition hover:border-zinc-500"
+          >
+            Inscription
+          </Link>
+          <Link
             href="/login"
             className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-zinc-950 transition hover:bg-emerald-400"
           >
