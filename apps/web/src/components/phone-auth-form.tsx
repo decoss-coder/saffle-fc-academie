@@ -21,9 +21,9 @@ export function PhoneAuthForm({ mode, action }: PhoneAuthFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-4">
       <div>
-        <label htmlFor="phone" className="mb-2 block text-sm font-semibold text-[#1d3c2a]">
+        <label htmlFor="phone" className="mb-1.5 block text-sm font-semibold text-[#1d3c2a]">
           Numéro de téléphone
         </label>
         <input
@@ -36,15 +36,10 @@ export function PhoneAuthForm({ mode, action }: PhoneAuthFormProps) {
           className={inputClass}
           placeholder="07 07 20 18 33"
         />
-        <p className="mt-2 text-xs leading-5 text-[#607064]">
-          {mode === "login"
-            ? "Le numéro enregistré sur la fiche de votre enfant ou par le club."
-            : "Utilisez le numéro communiqué lors de l'inscription au club."}
-        </p>
       </div>
 
       <div>
-        <label htmlFor="password" className="mb-2 block text-sm font-semibold text-[#1d3c2a]">
+        <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-[#1d3c2a]">
           Mot de passe
         </label>
         <input
@@ -63,7 +58,7 @@ export function PhoneAuthForm({ mode, action }: PhoneAuthFormProps) {
         <div>
           <label
             htmlFor="password_confirm"
-            className="mb-2 block text-sm font-semibold text-[#1d3c2a]"
+            className="mb-1.5 block text-sm font-semibold text-[#1d3c2a]"
           >
             Confirmer le mot de passe
           </label>
@@ -95,7 +90,7 @@ export function PhoneAuthForm({ mode, action }: PhoneAuthFormProps) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-full bg-[#06110b] py-3.5 text-sm font-black text-white transition hover:bg-[#12351f] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-full bg-[#06110b] py-3 text-sm font-black text-white transition hover:bg-[#12351f] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending
           ? "Chargement..."

@@ -10,7 +10,8 @@ export default function ActiverPage() {
   return (
     <AuthLayout
       title="Première connexion"
-      subtitle="Activez votre accès avec votre numéro enregistré"
+      subtitle="Activation du compte"
+      headerAction={{ href: "/login", label: "Se connecter", variant: "outline" }}
     >
       {!configured ? (
         <div className="space-y-4">
@@ -25,13 +26,7 @@ export default function ActiverPage() {
           </Link>
         </div>
       ) : (
-        <>
-          <p className="mb-5 rounded-lg border border-[#d8b451]/25 bg-[#fffaf0] px-4 py-3 text-sm leading-6 text-[#3f4b43]">
-            Parents : utilisez le numéro indiqué sur la fiche de votre enfant.
-            Staff : utilisez le numéro enregistré par l&apos;administration.
-          </p>
-          <PhoneAuthForm mode="activate" action={activateAccount} />
-        </>
+        <PhoneAuthForm mode="activate" action={activateAccount} />
       )}
     </AuthLayout>
   );

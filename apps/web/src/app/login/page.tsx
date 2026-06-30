@@ -16,6 +16,11 @@ export default async function LoginPage({
     <AuthLayout
       title="Accéder à la plateforme"
       subtitle="Connexion par numéro de téléphone"
+      headerAction={{
+        href: "/activer",
+        label: "Activer mon compte",
+        variant: "solid",
+      }}
     >
       {!configured ? (
         <div className="space-y-4">
@@ -32,7 +37,7 @@ export default async function LoginPage({
       ) : (
         <>
           {params.error === "auth_callback_failed" && (
-            <p className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
               La confirmation du lien a échoué. Réessayez.
             </p>
           )}
