@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { navActionClass } from "@/lib/dashboard-ui";
 import { DashboardShell, requireTreasurer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { ClubSection } from "@/components/club-ui";
 import { MatchForm, MatchList } from "./matchs-client";
 
@@ -18,10 +18,14 @@ export default async function MatchsPage() {
   return (
     <DashboardShell
       title="Matchs & primes"
-      subtitle={`2 500 / 5 000 FCFA — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Vie du club", href: "/dashboard/club" },
+        { label: "Matchs & primes" },
+      ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
-      actions={<Link href="/dashboard/club" className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800">Retour</Link>}
+      actions={<Link href="/dashboard/club" className={navActionClass}>Retour</Link>}
     >
       <MatchForm />
       <ClubSection title="Historique">

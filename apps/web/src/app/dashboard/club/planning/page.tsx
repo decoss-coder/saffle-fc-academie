@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { PLAYER_GROUPS } from "@/lib/players/constants";
 import { ClubSection } from "@/components/club-ui";
+import { GroupTabs } from "@/components/group-tabs";
+import { navActionClass } from "@/lib/dashboard-ui";
+import { DataTable, ListCount } from "@/components/data-table";
 import {
   PlanningForms,
-  PlanningTeamTabs,
   ScheduleTable,
 } from "./planning-client";
 
@@ -52,16 +53,33 @@ export default async function PlanningPage({
   return (
     <DashboardShell
       title="Planning entraînements"
-      subtitle={`${activeTeam} — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Vie du club", href: "/dashboard/club" },
+        { label: "Planning" },
+        ...(activeTeam ? [{ label: activeTeam }] : []),
+      ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
       actions={
-        <Link href="/dashboard/club" className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800">
+        <Link href="/dashboard/club" className={navActionClass}>
           Retour
         </Link>
       }
     >
-      <PlanningTeamTabs activeTeam={activeTeam} />
+      <GroupTabs
+        variant="pill"
+        activeKey={activeTeam}
+        items={PLAYER_GROUPS.map((g) => {
+          const count = (schedules ?? []).filter((s) => s.team === g.team).length;
+          return {
+            key: g.team,
+            label: g.team,
+            count,
+            href: `/dashboard/club/planning?groupe=${encodeURIComponent(g.team)}`,
+          };
+        })}
+      />
 
       <ClubSection title="Objectif vs planifié">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -93,9 +111,17 @@ export default async function PlanningPage({
       <PlanningForms team={activeTeam} targets={targetMap} />
 
       <ClubSection title="Tous les créneaux">
-        <div className="overflow-x-auto rounded-2xl border border-green-200 bg-white shadow-sm">
+        <DataTable
+          count={
+            <ListCount
+              count={(schedules ?? []).length}
+              label="créneau"
+              labelPlural="créneaux"
+            />
+          }
+        >
           <ScheduleTable schedules={schedules ?? []} />
-        </div>
+        </DataTable>
       </ClubSection>
     </DashboardShell>
   );

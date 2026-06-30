@@ -5,7 +5,6 @@ import {
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import {
   DUE_STATUS_LABELS,
   formatFcfa,
@@ -14,6 +13,7 @@ import {
 import { initiateWavePayment } from "@/app/dashboard/paiements/actions";
 import { redirect } from "next/navigation";
 import { unwrapRelation } from "@/lib/supabase/relation";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function ParentPaymentsPage({
   searchParams,
@@ -62,7 +62,10 @@ export default async function ParentPaymentsPage({
   return (
     <DashboardShell
       title="Paiements"
-      subtitle={`Cotisations et Wave (FCFA) — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Famille", href: "/dashboard" },
+        { label: "Paiements" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
@@ -75,9 +78,7 @@ export default async function ParentPaymentsPage({
       <section className="space-y-4">
         <h2 className="text-lg font-medium text-green-900">Cotisations en cours</h2>
         {!dues?.length ? (
-          <p className="rounded-2xl border border-dashed border-green-300 bg-white p-8 text-center text-green-700">
-            Aucune cotisation en attente.
-          </p>
+          <EmptyState message="Aucune cotisation en attente." />
         ) : (
           dues.map((due) => {
             const player = unwrapRelation(due.players);

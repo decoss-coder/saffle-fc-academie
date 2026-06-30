@@ -2,6 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "@/app/auth/actions";
 import { CLUB } from "@/lib/club";
+import { DashboardBreadcrumbs } from "@/components/dashboard-breadcrumbs";
+import { NavIconForHref } from "@/components/nav-icons";
+import type { BreadcrumbItem } from "@/lib/dashboard-ui";
 import {
   canManageBudget,
   canManageClub,
@@ -16,6 +19,7 @@ import {
 type DashboardShellProps = {
   title: string;
   subtitle?: string;
+  breadcrumbs?: BreadcrumbItem[];
   userName: string;
   userRole: string;
   actions?: React.ReactNode;
@@ -23,12 +27,11 @@ type DashboardShellProps = {
 };
 
 function buildNavItems(userRole: string) {
-  const items: { href: string; label: string; icon: string; group: string }[] = [
-    { href: "/dashboard", label: "Accueil", icon: "A", group: "Pilotage" },
+  const items: { href: string; label: string; group: string }[] = [
+    { href: "/dashboard", label: "Accueil", group: "Pilotage" },
     {
       href: "/dashboard/notifications",
       label: "Notifications",
-      icon: "N",
       group: "Pilotage",
     },
   ];
@@ -37,7 +40,6 @@ function buildNavItems(userRole: string) {
     items.push({
       href: "/dashboard/mes-documents",
       label: "Documents",
-      icon: "D",
       group: "Famille",
     });
   }
@@ -47,19 +49,16 @@ function buildNavItems(userRole: string) {
       {
         href: "/dashboard/parent",
         label: "Mes enfants",
-        icon: "E",
         group: "Famille",
       },
       {
         href: "/dashboard/parent/convocations",
         label: "Convocations",
-        icon: "C",
         group: "Famille",
       },
       {
         href: "/dashboard/parent/paiements",
         label: "Paiements",
-        icon: "P",
         group: "Famille",
       },
     );
@@ -70,13 +69,11 @@ function buildNavItems(userRole: string) {
       {
         href: "/dashboard/joueurs",
         label: "Joueurs",
-        icon: "J",
         group: "Club",
       },
       {
         href: "/dashboard/documents",
         label: "Documents",
-        icon: "D",
         group: "Club",
       },
     );
@@ -86,7 +83,6 @@ function buildNavItems(userRole: string) {
     items.push({
       href: "/dashboard/convocations",
       label: "Convocations",
-      icon: "C",
       group: "Club",
     });
   }
@@ -95,7 +91,6 @@ function buildNavItems(userRole: string) {
     items.push({
       href: "/dashboard/club",
       label: "Vie du club",
-      icon: "V",
       group: "Club",
     });
   }
@@ -104,13 +99,11 @@ function buildNavItems(userRole: string) {
     items.push({
       href: "/dashboard/paiements",
       label: "Paiements",
-      icon: "P",
       group: "Finance",
     });
     items.push({
       href: "/dashboard/comite",
       label: "Comité directeur",
-      icon: "B",
       group: "Finance",
     });
   }
@@ -119,7 +112,6 @@ function buildNavItems(userRole: string) {
     items.push({
       href: "/dashboard/budget",
       label: "Budget",
-      icon: "F",
       group: "Finance",
     });
   }
@@ -128,7 +120,6 @@ function buildNavItems(userRole: string) {
     items.push({
       href: "/dashboard/admin/telephones",
       label: "Membres",
-      icon: "M",
       group: "Administration",
     });
   }
@@ -146,6 +137,7 @@ function groupNavItems(items: ReturnType<typeof buildNavItems>) {
 export function DashboardShell({
   title,
   subtitle,
+  breadcrumbs,
   userName,
   userRole,
   actions,
@@ -168,15 +160,13 @@ export function DashboardShell({
                 className="rounded-xl bg-white object-cover ring-1 ring-white/20"
               />
               <div>
-                <p className="text-sm font-semibold leading-tight">
-                  {CLUB.shortName}
-                </p>
+                <p className="text-sm font-semibold leading-tight">{CLUB.name}</p>
                 <p className="text-xs text-emerald-100/70">{CLUB.city}</p>
               </div>
             </Link>
           </div>
 
-          <nav className="flex-1 space-y-7 px-4 py-6">
+          <nav className="flex-1 space-y-7 overflow-y-auto px-4 py-6">
             {Object.entries(navGroups).map(([group, items]) => (
               <div key={group}>
                 <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/50">
@@ -189,8 +179,8 @@ export function DashboardShell({
                       href={item.href}
                       className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-emerald-50/80 transition hover:bg-white/10 hover:text-white"
                     >
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-xs font-semibold text-emerald-100 ring-1 ring-white/10">
-                        {item.icon}
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-emerald-100 ring-1 ring-white/10">
+                        <NavIconForHref href={item.href} className="h-4 w-4" />
                       </span>
                       {item.label}
                     </Link>
@@ -219,9 +209,9 @@ export function DashboardShell({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-[#dce4d4] bg-[#f8faf6]/90 backdrop-blur">
-            <div className="flex min-h-18 items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-              <Link href="/dashboard" className="flex items-center gap-3 lg:hidden">
+          <header className="sticky top-0 z-20 border-b border-[#dce4d4] bg-[#f8faf6]/90 backdrop-blur lg:hidden">
+            <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-3">
+              <Link href="/dashboard" className="flex min-w-0 items-center gap-3">
                 <Image
                   src={CLUB.assets.logo}
                   alt={CLUB.name}
@@ -229,29 +219,16 @@ export function DashboardShell({
                   height={42}
                   className="rounded-xl bg-white object-cover ring-1 ring-slate-900/10"
                 />
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-950">
                     {CLUB.shortName}
                   </p>
-                  <p className="text-xs text-slate-500">{userRole}</p>
+                  <p className="text-xs text-slate-500">Académie CI</p>
                 </div>
               </Link>
-              <div className="hidden lg:block">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Console club
-                </p>
-                <p className="mt-1 text-sm font-medium text-slate-800">
-                  {userName}
-                </p>
-              </div>
-              <div className="flex min-w-0 items-center justify-end gap-3">
-                <div className="hidden rounded-full border border-[#d6dfcf] bg-white px-4 py-2 text-sm text-slate-600 shadow-sm sm:block">
-                  {CLUB.name}
-                </div>
-                {actions}
-              </div>
+              {actions}
             </div>
-            <div className="flex gap-2 overflow-x-auto border-t border-[#e3eadf] px-4 py-3 sm:px-6 lg:hidden">
+            <div className="flex gap-2 overflow-x-auto border-t border-[#e3eadf] px-4 py-3">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -266,17 +243,20 @@ export function DashboardShell({
 
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-7">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
                     {title}
                   </h1>
-                  {subtitle && (
+                  {breadcrumbs && breadcrumbs.length > 0 ? (
+                    <DashboardBreadcrumbs items={breadcrumbs} />
+                  ) : subtitle ? (
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                       {subtitle}
                     </p>
-                  )}
+                  ) : null}
                 </div>
+                <div className="hidden shrink-0 lg:flex">{actions}</div>
               </div>
               {children}
             </div>

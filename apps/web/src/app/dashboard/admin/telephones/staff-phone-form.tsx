@@ -1,8 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { PhoneRegistryState } from "./actions";
 import { STAFF_ROLES } from "@/lib/roles";
+import {
+  FieldError,
+  RequiredLabel,
+  fieldErrorClass,
+  validateRequired,
+} from "@/components/form-field";
 
 const initialState: PhoneRegistryState = {};
 
@@ -11,13 +17,16 @@ const inputClass =
 
 type StaffPhoneFormProps = {
   action: (
-    prevState: PhoneRegistryState,
+    prev: PhoneRegistryState,
     formData: FormData,
   ) => Promise<PhoneRegistryState>;
 };
 
 export function StaffPhoneForm({ action }: StaffPhoneFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const [nameError, setNameError] = useState<string | undefined>();
+  const [phoneError, setPhoneError] = useState<string | undefined>();
+  const [roleError, setRoleError] = useState<string | undefined>();
 
   return (
     <form
@@ -27,35 +36,35 @@ export function StaffPhoneForm({ action }: StaffPhoneFormProps) {
       <h2 className="text-lg font-medium text-green-900">
         Enregistrer un membre staff
       </h2>
-      <p className="text-sm text-green-700">
+      <p className="text-sm text-slate-600">
         Bureau, coach, trésorier… La personne activera son compte avec ce numéro.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="full_name" className="mb-1 block text-sm text-green-800">
-            Nom complet
-          </label>
+          <RequiredLabel htmlFor="full_name">Nom complet</RequiredLabel>
           <input
             id="full_name"
             name="full_name"
             required
-            className={inputClass}
+            className={`${inputClass} ${fieldErrorClass(!!nameError)}`}
             placeholder="Jean Kouassi"
+            onBlur={(e) => setNameError(validateRequired(e.target.value))}
           />
+          <FieldError message={nameError} />
         </div>
         <div>
-          <label htmlFor="phone" className="mb-1 block text-sm text-green-800">
-            Téléphone
-          </label>
+          <RequiredLabel htmlFor="phone">Téléphone</RequiredLabel>
           <input
             id="phone"
             name="phone"
             type="tel"
             required
-            className={inputClass}
+            className={`${inputClass} ${fieldErrorClass(!!phoneError)}`}
             placeholder="07 07 20 18 33"
+            onBlur={(e) => setPhoneError(validateRequired(e.target.value))}
           />
+          <FieldError message={phoneError} />
         </div>
         <div>
           <label
@@ -72,10 +81,17 @@ export function StaffPhoneForm({ action }: StaffPhoneFormProps) {
           />
         </div>
         <div>
-          <label htmlFor="role" className="mb-1 block text-sm text-green-800">
-            Droits sur la plateforme
-          </label>
-          <select id="role" name="role" required className={inputClass}>
+          <RequiredLabel htmlFor="role">Droits sur la plateforme</RequiredLabel>
+          <select
+            id="role"
+            name="role"
+            required
+            className={`${inputClass} ${fieldErrorClass(!!roleError)}`}
+            defaultValue=""
+            onBlur={(e) =>
+              setRoleError(e.target.value ? undefined : "Choisissez un rôle.")
+            }
+          >
             <option value="">Choisir</option>
             {STAFF_ROLES.map((item) => (
               <option key={item.value} value={item.value}>
@@ -83,6 +99,7 @@ export function StaffPhoneForm({ action }: StaffPhoneFormProps) {
               </option>
             ))}
           </select>
+          <FieldError message={roleError} />
         </div>
       </div>
 

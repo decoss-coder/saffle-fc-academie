@@ -5,7 +5,6 @@ import {
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import {
   formatDateTime,
   formatEventType,
@@ -15,6 +14,7 @@ import { respondConvocation } from "@/app/dashboard/convocations/actions";
 import { ConvocationResponseForm } from "@/components/convocation-response-form";
 import { redirect } from "next/navigation";
 import { unwrapRelation } from "@/lib/supabase/relation";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function ParentConvocationsPage() {
   const { user, profile } = await requireUser();
@@ -46,14 +46,15 @@ export default async function ParentConvocationsPage() {
   return (
     <DashboardShell
       title="Convocations"
-      subtitle={`Réponses pour vos enfants — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Famille", href: "/dashboard" },
+        { label: "Convocations" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
       {!sorted.length ? (
-        <div className="rounded-2xl border border-dashed border-green-300 bg-white p-10 text-center text-green-800">
-          Aucune convocation pour le moment.
-        </div>
+        <EmptyState message="Aucune convocation pour le moment." />
       ) : (
         <div className="space-y-4">
           {sorted.map((entry) => {

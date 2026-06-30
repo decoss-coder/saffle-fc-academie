@@ -3,6 +3,15 @@ import { notFound } from "next/navigation";
 import { DashboardShell, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { EmptyState } from "@/components/empty-state";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableHead,
+  DataTableTh,
+  ListCount,
+} from "@/components/data-table";
+import { matriculeClass, navActionClass, rowCompact } from "@/lib/dashboard-ui";
 import { RESPONSE_STATUS_LABELS } from "@/lib/convocations/constants";
 import { PERFORMANCE_LABELS } from "@/lib/notifications/constants";
 import { unwrapRelation } from "@/lib/supabase/relation";
@@ -23,6 +32,8 @@ export default async function JoueurPresencesPage({
     .maybeSingle();
 
   if (!player) notFound();
+
+  const playerName = `${player.last_name} ${player.first_name}`;
 
   const { data: entries } = await supabase
     .from("convocation_entries")
@@ -49,14 +60,19 @@ export default async function JoueurPresencesPage({
 
   return (
     <DashboardShell
-      title={`Présences — ${player.last_name} ${player.first_name}`}
-      subtitle={player.matricule}
+      title={`Présences — ${playerName}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Joueurs", href: "/dashboard/joueurs" },
+        { label: playerName, href: `/dashboard/joueurs/${player.id}` },
+        { label: "Présences" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
       actions={
         <Link
           href={`/dashboard/joueurs/${player.id}`}
-          className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800 hover:bg-green-50"
+          className={navActionClass}
         >
           Retour à la fiche
         </Link>
@@ -70,11 +86,8 @@ export default async function JoueurPresencesPage({
           size="md"
         />
         <div>
-          <p className="font-semibold text-green-900">
-            {player.last_name} {player.first_name}
-          </p>
-          <p className="text-sm text-green-700">
-            {player.matricule}
+          <p className="font-semibold text-green-900">{playerName}</p>
+          <p className={matriculeClass}>{player.matricule}
             {player.team ? ` · ${player.team}` : ""}
           </p>
         </div>
@@ -85,54 +98,58 @@ export default async function JoueurPresencesPage({
           Historique des entraînements
         </h2>
         {!trainingEntries.length ? (
-          <p className="rounded-2xl border border-dashed border-green-300 bg-white p-6 text-sm text-green-700">
-            Aucune séance d&apos;entraînement enregistrée pour ce joueur.
-          </p>
+          <EmptyState message="Aucune séance d'entraînement enregistrée pour ce joueur." />
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-green-200 bg-white shadow-sm">
-            <table className="min-w-full text-sm">
-              <thead className="bg-green-800 text-green-100">
-                <tr>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Séance</th>
-                  <th className="px-4 py-3 text-left">Lieu</th>
-                  <th className="px-4 py-3 text-left">Présence</th>
-                  <th className="px-4 py-3 text-left">Performance</th>
+          <DataTable
+            count={
+              <ListCount
+                count={trainingEntries.length}
+                label="séance"
+                labelPlural="séances"
+              />
+            }
+          >
+            <DataTableHead>
+              <tr>
+                <DataTableTh>Date</DataTableTh>
+                <DataTableTh>Séance</DataTableTh>
+                <DataTableTh>Lieu</DataTableTh>
+                <DataTableTh>Présence</DataTableTh>
+                <DataTableTh>Performance</DataTableTh>
+              </tr>
+            </DataTableHead>
+            <DataTableBody>
+              {trainingEntries.map((entry) => (
+                <tr key={entry.id}>
+                  <td className={`${rowCompact} text-slate-600`}>
+                    {new Intl.DateTimeFormat("fr-CI", {
+                      weekday: "short",
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }).format(new Date(entry.convocation!.event_date))}
+                  </td>
+                  <td className={`${rowCompact} font-medium text-green-900`}>
+                    {entry.convocation!.title}
+                  </td>
+                  <td className={`${rowCompact} text-slate-600`}>
+                    {entry.convocation!.location ?? "—"}
+                  </td>
+                  <td className={rowCompact}>
+                    {RESPONSE_STATUS_LABELS[entry.response] ?? entry.response}
+                  </td>
+                  <td className={rowCompact}>
+                    {entry.performance_level
+                      ? PERFORMANCE_LABELS[entry.performance_level] ??
+                        entry.performance_level
+                      : "—"}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-green-100">
-                {trainingEntries.map((entry) => (
-                  <tr key={entry.id}>
-                    <td className="px-4 py-3 text-green-700">
-                      {new Intl.DateTimeFormat("fr-CI", {
-                        weekday: "short",
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }).format(new Date(entry.convocation!.event_date))}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-green-900">
-                      {entry.convocation!.title}
-                    </td>
-                    <td className="px-4 py-3 text-green-700">
-                      {entry.convocation!.location ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {RESPONSE_STATUS_LABELS[entry.response] ?? entry.response}
-                    </td>
-                    <td className="px-4 py-3">
-                      {entry.performance_level
-                        ? PERFORMANCE_LABELS[entry.performance_level] ??
-                          entry.performance_level
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </DataTableBody>
+          </DataTable>
         )}
       </section>
     </DashboardShell>

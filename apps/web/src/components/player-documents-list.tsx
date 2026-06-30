@@ -7,6 +7,8 @@ import {
 } from "@/lib/documents/constants";
 import { getDocumentSignedUrl } from "@/app/dashboard/documents/actions";
 import { DocumentReviewActions } from "@/components/document-review-actions";
+import { EmptyState } from "@/components/empty-state";
+import { matriculeClass } from "@/lib/dashboard-ui";
 
 export type PlayerDocumentRow = {
   id: string;
@@ -37,11 +39,7 @@ export async function PlayerDocumentsList({
   playerLabel,
 }: PlayerDocumentsListProps) {
   if (!documents.length) {
-    return (
-      <p className="rounded-2xl border border-dashed border-green-300 bg-white p-6 text-sm text-green-700">
-        Aucun document déposé pour le moment.
-      </p>
-    );
+    return <EmptyState message="Aucun document déposé pour le moment." />;
   }
 
   const items = await Promise.all(
@@ -63,8 +61,8 @@ export async function PlayerDocumentsList({
               <p className="font-medium text-green-900">
                 {formatDocumentType(doc.document_type)}
               </p>
-              <p className="mt-1 text-sm text-green-700">{doc.file_name}</p>
-              <p className="mt-1 text-xs text-green-600">
+              <p className="mt-1 text-sm text-slate-600">{doc.file_name}</p>
+              <p className="mt-1 text-xs text-slate-500">
                 {formatFileSize(doc.file_size)} ·{" "}
                 {new Intl.DateTimeFormat("fr-CI", {
                   day: "2-digit",
@@ -75,13 +73,17 @@ export async function PlayerDocumentsList({
                 }).format(new Date(doc.created_at))}
               </p>
               {doc.player_name && (
-                <p className="mt-1 text-sm font-medium text-green-800">
+                <p className="mt-1 text-sm font-medium text-green-900">
                   {doc.player_name}
-                  {doc.player_matricule ? ` · ${doc.player_matricule}` : ""}
+                  {doc.player_matricule ? (
+                    <span className={`ml-1 ${matriculeClass}`}>
+                      · {doc.player_matricule}
+                    </span>
+                  ) : null}
                 </p>
               )}
               {showPlayerLink && playerLabel && (
-                <p className="mt-1 text-xs text-green-600">{playerLabel}</p>
+                <p className="mt-1 text-xs text-slate-500">{playerLabel}</p>
               )}
             </div>
             <span

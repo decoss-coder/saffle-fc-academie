@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
 import {
   saveTrainingSchedule,
   updateTrainingTarget,
@@ -9,7 +8,8 @@ import {
 } from "@/app/dashboard/club/actions";
 import { DAYS_OF_WEEK, formatDay, hoursBetween } from "@/lib/club-modules/constants";
 import { ClubCard, ClubFormMessages, inputClass } from "@/components/club-ui";
-import { PLAYER_GROUPS } from "@/lib/players/constants";
+import { DataTableBody, DataTableHead, DataTableTh } from "@/components/data-table";
+import { rowCompact } from "@/lib/dashboard-ui";
 
 const initial: ClubFormState = {};
 
@@ -95,45 +95,31 @@ export function ScheduleTable({
   }>;
 }) {
   return (
-    <table className="min-w-full text-sm">
-      <thead className="bg-green-800 text-green-100">
+    <>
+      <DataTableHead>
         <tr>
-          <th className="px-4 py-3 text-left">Groupe</th>
-          <th className="px-4 py-3 text-left">Jour</th>
-          <th className="px-4 py-3 text-left">Horaire</th>
-          <th className="px-4 py-3 text-left">Durée</th>
-          <th className="px-4 py-3 text-left">Lieu</th>
+          <DataTableTh>Groupe</DataTableTh>
+          <DataTableTh>Jour</DataTableTh>
+          <DataTableTh>Horaire</DataTableTh>
+          <DataTableTh>Durée</DataTableTh>
+          <DataTableTh>Lieu</DataTableTh>
         </tr>
-      </thead>
-      <tbody className="divide-y divide-green-100">
+      </DataTableHead>
+      <DataTableBody>
         {schedules.map((s) => (
           <tr key={s.id}>
-            <td className="px-4 py-3">{s.team}</td>
-            <td className="px-4 py-3">{formatDay(s.day_of_week)}</td>
-            <td className="px-4 py-3">{s.start_time.slice(0, 5)} – {s.end_time.slice(0, 5)}</td>
-            <td className="px-4 py-3">{hoursBetween(s.start_time, s.end_time).toFixed(1)} h</td>
-            <td className="px-4 py-3">{s.location ?? "—"}</td>
+            <td className={rowCompact}>{s.team}</td>
+            <td className={rowCompact}>{formatDay(s.day_of_week)}</td>
+            <td className={rowCompact}>
+              {s.start_time.slice(0, 5)} – {s.end_time.slice(0, 5)}
+            </td>
+            <td className={rowCompact}>
+              {hoursBetween(s.start_time, s.end_time).toFixed(1)} h
+            </td>
+            <td className={rowCompact}>{s.location ?? "—"}</td>
           </tr>
         ))}
-      </tbody>
-    </table>
-  );
-}
-
-export function PlanningTeamTabs({ activeTeam }: { activeTeam: string }) {
-  return (
-    <nav className="flex flex-wrap gap-2">
-      {PLAYER_GROUPS.map((g) => (
-        <Link
-          key={g.team}
-          href={`/dashboard/club/planning?groupe=${encodeURIComponent(g.team)}`}
-          className={`rounded-full px-4 py-2 text-sm ${
-            activeTeam === g.team ? "bg-green-800 text-white" : "border border-green-300 text-green-800"
-          }`}
-        >
-          {g.team}
-        </Link>
-      ))}
-    </nav>
+      </DataTableBody>
+    </>
   );
 }

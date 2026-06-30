@@ -2,10 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardShell, requireTreasurer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { COMMITTEE_ROLES } from "@/lib/budget/constants";
 import { formatRole } from "@/lib/roles";
 import { ClubSection } from "@/components/club-ui";
+import { EmptyState } from "@/components/empty-state";
+import { InfoBanner } from "@/components/info-banner";
+import { navActionClass } from "@/lib/dashboard-ui";
 import { BulkDueForm, DueStatus, PaymentForm, SingleDueForm, formatFcfa } from "./comite-client";
 
 export default async function ComitePage() {
@@ -26,19 +28,22 @@ export default async function ComitePage() {
   return (
     <DashboardShell
       title="Comité directeur"
-      subtitle={`Cotisations membres — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Finance", href: "/dashboard" },
+        { label: "Comité directeur" },
+      ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
       actions={
-        <Link href="/dashboard/budget" className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800">
-          Budget
+        <Link href="/dashboard/budget" className={navActionClass}>
+          ← Budget
         </Link>
       }
     >
-      <p className="rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-800">
+      <InfoBanner>
         Cotisations des membres du comité directeur, gérées par le trésorier.
         Les encaissements peuvent être reportés manuellement dans le budget actif (recette « cotisation comité »).
-      </p>
+      </InfoBanner>
 
       <BulkDueForm />
       <SingleDueForm
@@ -86,7 +91,7 @@ export default async function ComitePage() {
             );
           })}
           {!dues?.length && (
-            <p className="text-sm text-green-700">Aucune cotisation comité.</p>
+            <EmptyState message="Aucune cotisation comité." />
           )}
         </div>
       </ClubSection>

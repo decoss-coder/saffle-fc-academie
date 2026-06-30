@@ -2,6 +2,7 @@ import {
   getPlayerPhotoSignedUrl,
 } from "@/app/dashboard/joueurs/photo-actions";
 import { playerInitials } from "@/lib/players/photos";
+import { avatarFallbackClass } from "@/lib/dashboard-ui";
 
 type PlayerAvatarProps = {
   photoPath?: string | null;
@@ -41,7 +42,7 @@ export async function PlayerAvatar({
 
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-green-100 font-semibold text-green-800 ring-2 ring-green-200 ${sizeClass} ${className}`}
+      className={`${avatarFallbackClass} ${sizeClass} ${className}`}
       aria-hidden
     >
       {initials}

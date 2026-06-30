@@ -28,10 +28,17 @@ export default async function ModifierJoueurPage({
     notFound();
   }
 
+  const playerName = `${player.last_name} ${player.first_name}`;
+
   return (
     <DashboardShell
-      title={`Modifier — ${player.last_name} ${player.first_name}`}
-      subtitle={player.matricule}
+      title={`Modifier — ${playerName}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Joueurs", href: "/dashboard/joueurs" },
+        { label: playerName, href: `/dashboard/joueurs/${player.id}` },
+        { label: "Modifier" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >

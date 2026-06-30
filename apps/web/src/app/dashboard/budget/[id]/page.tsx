@@ -2,10 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardShell, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { canViewBudget, resolveSignoffCapabilities } from "@/lib/budget/permissions";
 import { formatFcfa } from "@/lib/payments/constants";
 import { ClubSection } from "@/components/club-ui";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableHead,
+  DataTableTh,
+  ListCount,
+} from "@/components/data-table";
+import { rowCompact, navActionClass } from "@/lib/dashboard-ui";
 import {
   ActivateBudgetButton,
   BudgetLineForm,
@@ -89,11 +96,15 @@ export default async function BudgetDetailPage({
   return (
     <DashboardShell
       title={budget.title}
-      subtitle={`${(budget.seasons as { name?: string } | null)?.name ?? "Saison"} — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Finance", href: "/dashboard" },
+        { label: "Budget", href: "/dashboard/budget" },
+        { label: budget.title },
+      ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
       actions={
-        <Link href="/dashboard/budget" className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800">
+        <Link href="/dashboard/budget" className={navActionClass}>
           Retour
         </Link>
       }
@@ -158,28 +169,36 @@ export default async function BudgetDetailPage({
       />
 
       <ClubSection title="Lignes prévisionnelles">
-        <div className="overflow-x-auto rounded-2xl border border-green-200 bg-white shadow-sm">
-          <table className="min-w-full text-sm">
-            <thead className="bg-green-800 text-green-100">
-              <tr>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Catégorie</th>
-                <th className="px-4 py-3 text-left">Libellé</th>
-                <th className="px-4 py-3 text-right">Prévu</th>
+        <DataTable
+          count={
+            <ListCount
+              count={(lines ?? []).length}
+              label="ligne"
+              labelPlural="lignes"
+            />
+          }
+        >
+          <DataTableHead>
+            <tr>
+              <DataTableTh>Type</DataTableTh>
+              <DataTableTh>Catégorie</DataTableTh>
+              <DataTableTh>Libellé</DataTableTh>
+              <DataTableTh className="text-right">Prévu</DataTableTh>
+            </tr>
+          </DataTableHead>
+          <DataTableBody>
+            {(lines ?? []).map((l) => (
+              <tr key={l.id}>
+                <td className={`${rowCompact} capitalize`}>{l.line_type}</td>
+                <td className={rowCompact}>{l.category}</td>
+                <td className={rowCompact}>{l.label}</td>
+                <td className={`${rowCompact} text-right`}>
+                  {formatFcfa(Number(l.amount_planned))}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-green-100">
-              {(lines ?? []).map((l) => (
-                <tr key={l.id}>
-                  <td className="px-4 py-3 capitalize">{l.line_type}</td>
-                  <td className="px-4 py-3">{l.category}</td>
-                  <td className="px-4 py-3">{l.label}</td>
-                  <td className="px-4 py-3 text-right">{formatFcfa(Number(l.amount_planned))}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </DataTableBody>
+        </DataTable>
       </ClubSection>
 
       {isActive && isTreasurer && (

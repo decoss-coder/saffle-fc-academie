@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { navActionClass } from "@/lib/dashboard-ui";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { DISCIPLINE_STATUS_LABELS } from "@/lib/club-modules/constants";
 import { ClubSection } from "@/components/club-ui";
+import { ClickableCard } from "@/components/clickable-card";
 import { DisciplineForm } from "./discipline-client";
 import { unwrapRelation } from "@/lib/supabase/relation";
 
@@ -19,7 +20,7 @@ export default async function DisciplinePage() {
 
   const { data: records } = await supabase
     .from("player_discipline_records")
-    .select("*, players(first_name, last_name, team)")
+    .select("*, players(id, first_name, last_name, team)")
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -33,10 +34,14 @@ export default async function DisciplinePage() {
   return (
     <DashboardShell
       title="Discipline"
-      subtitle={`Registre & encouragements — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Vie du club", href: "/dashboard/club" },
+        { label: "Discipline" },
+      ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
-      actions={<Link href="/dashboard/club" className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800">Retour</Link>}
+      actions={<Link href="/dashboard/club" className={navActionClass}>Retour</Link>}
     >
       <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
         Seuil automatique : 3 absences/déclins en 30 jours → avertissement + notification (doc. Bakagnoko).
@@ -58,15 +63,24 @@ export default async function DisciplinePage() {
         <div className="space-y-2">
           {(records ?? []).map((r) => {
             const p = unwrapRelation(r.players);
-            return (
-              <article key={r.id} className="rounded-xl border border-green-200 bg-white p-4 text-sm">
+            const content = (
+              <>
                 <p className="font-medium text-green-900">
                   {p ? `${p.last_name} ${p.first_name}` : "—"} · {r.incident_type}
                 </p>
-                <p className="text-green-700">{r.description}</p>
-                <p className="text-xs text-green-600">
+                <p className="text-slate-600">{r.description}</p>
+                <p className="text-xs text-slate-500">
                   {new Intl.DateTimeFormat("fr-CI").format(new Date(r.created_at))}
                 </p>
+              </>
+            );
+            return p ? (
+              <ClickableCard key={r.id} href={`/dashboard/joueurs/${p.id}`}>
+                {content}
+              </ClickableCard>
+            ) : (
+              <article key={r.id} className="rounded-xl border border-green-200 bg-white p-4 text-sm">
+                {content}
               </article>
             );
           })}

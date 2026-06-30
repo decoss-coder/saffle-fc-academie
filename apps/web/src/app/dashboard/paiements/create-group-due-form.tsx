@@ -1,8 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { PLAYER_GROUPS } from "@/lib/players/constants";
 import type { PaymentFormState } from "@/app/dashboard/paiements/actions";
+import {
+  FieldError,
+  RequiredLabel,
+  fieldErrorClass,
+  validateRequired,
+} from "@/components/form-field";
 
 const inputClass =
   "w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none ring-green-600 focus:ring-2";
@@ -22,6 +28,9 @@ export function CreateGroupDueForm({
   action,
 }: CreateGroupDueFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const [groupError, setGroupError] = useState<string | undefined>();
+  const [labelError, setLabelError] = useState<string | undefined>();
+  const [amountError, setAmountError] = useState<string | undefined>();
 
   return (
     <form
@@ -32,17 +41,26 @@ export function CreateGroupDueForm({
         <h2 className="text-lg font-medium text-green-900">
           Nouvelle cotisation par catégorie
         </h2>
-        <p className="mt-1 text-sm text-green-700">
+        <p className="mt-1 text-sm text-slate-600">
           La cotisation sera créée pour tous les joueurs du groupe sélectionné.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-sm text-green-800">
-            Catégorie / groupe
-          </label>
-          <select name="team_group" required className={inputClass} defaultValue="">
+          <RequiredLabel htmlFor="team_group">Catégorie / groupe</RequiredLabel>
+          <select
+            id="team_group"
+            name="team_group"
+            required
+            className={`${inputClass} ${fieldErrorClass(!!groupError)}`}
+            defaultValue=""
+            onBlur={(e) =>
+              setGroupError(
+                e.target.value ? undefined : "Choisissez un groupe.",
+              )
+            }
+          >
             <option value="">Choisir un groupe</option>
             {PLAYER_GROUPS.map((group) => (
               <option key={group.team} value={group.team}>
@@ -51,32 +69,46 @@ export function CreateGroupDueForm({
               </option>
             ))}
           </select>
+          <FieldError message={groupError} />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-sm text-green-800">Libellé</label>
+          <RequiredLabel htmlFor="due-label">Libellé</RequiredLabel>
           <input
+            id="due-label"
             name="label"
             required
             placeholder="Ex. Cotisation trimestre 1"
-            className={inputClass}
+            className={`${inputClass} ${fieldErrorClass(!!labelError)}`}
+            onBlur={(e) => setLabelError(validateRequired(e.target.value))}
           />
+          <FieldError message={labelError} />
         </div>
         <div>
-          <label className="mb-1 block text-sm text-green-800">
-            Montant (FCFA)
-          </label>
+          <RequiredLabel htmlFor="due-amount">Montant (FCFA)</RequiredLabel>
           <input
+            id="due-amount"
             name="amount_due"
             type="number"
             min={100}
             step={1}
             required
-            className={inputClass}
+            className={`${inputClass} ${fieldErrorClass(!!amountError)}`}
+            onBlur={(e) => {
+              const v = e.target.value;
+              setAmountError(
+                !v || Number(v) < 100
+                  ? "Montant minimum : 100 FCFA."
+                  : undefined,
+              );
+            }}
           />
+          <FieldError message={amountError} />
         </div>
         <div>
-          <label className="mb-1 block text-sm text-green-800">Échéance</label>
-          <input name="due_date" type="date" className={inputClass} />
+          <label htmlFor="due-date" className="mb-1 block text-sm text-green-800">
+            Échéance
+          </label>
+          <input id="due-date" name="due_date" type="date" className={inputClass} />
         </div>
       </div>
 

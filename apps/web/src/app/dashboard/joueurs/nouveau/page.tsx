@@ -3,7 +3,6 @@ import { DashboardShell, requireStaff } from "@/lib/auth";
 import { PlayerForm } from "@/components/player-form";
 import { createPlayer } from "@/app/dashboard/joueurs/actions";
 import { PLAYER_GROUPS } from "@/lib/players/constants";
-import { CLUB } from "@/lib/club";
 
 export default async function NouveauJoueurPage({
   searchParams,
@@ -22,7 +21,11 @@ export default async function NouveauJoueurPage({
   return (
     <DashboardShell
       title="Nouveau joueur"
-      subtitle={`Inscription — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Joueurs", href: "/dashboard/joueurs" },
+        { label: "Nouveau joueur" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >

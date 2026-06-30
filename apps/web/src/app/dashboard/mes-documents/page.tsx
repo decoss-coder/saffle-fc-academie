@@ -4,11 +4,11 @@ import {
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { formatCategory } from "@/lib/players/constants";
 import { DocumentUploadForm } from "@/components/document-upload-form";
 import { PlayerDocumentsList } from "@/components/player-documents-list";
 import { PlayerPhotoSection } from "@/components/player-photo-section";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function MesDocumentsPage() {
   const { user, profile } = await requireDocumentUploader();
@@ -37,20 +37,20 @@ export default async function MesDocumentsPage() {
   return (
     <DashboardShell
       title="Mes documents"
-      subtitle={`Photos de profil et documents — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Famille", href: "/dashboard" },
+        { label: "Documents" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
       {!players?.length ? (
-        <div className="rounded-2xl border border-dashed border-green-300 bg-white p-10 text-center">
-          <p className="text-green-800">
-            Aucun joueur lié à votre compte pour déposer des documents.
-          </p>
-          <p className="mt-2 text-sm text-green-700">
+        <EmptyState message="Aucun joueur lié à votre compte pour déposer des documents.">
+          <p className="text-sm text-green-700">
             Contactez le club si votre enfant est inscrit avec votre numéro de
             téléphone.
           </p>
-        </div>
+        </EmptyState>
       ) : (
         <div className="space-y-8">
           {players.map((player) => {

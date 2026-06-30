@@ -13,6 +13,8 @@ import {
 } from "@/lib/players/constants";
 import { PlayerDocumentsList } from "@/components/player-documents-list";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { PhoneDisplay } from "@/components/phone-display";
+import { matriculeClass, navActionClass, primaryActionClass } from "@/lib/dashboard-ui";
 import { archivePlayer } from "@/app/dashboard/joueurs/actions";
 
 function display(value: string | number | null | undefined) {
@@ -40,6 +42,8 @@ export default async function JoueurDetailPage({
   }
 
   const canManage = canManagePlayers(profile.role);
+
+  const playerName = `${player.last_name} ${player.first_name}`;
 
   const { data: documents } = await supabase
     .from("player_documents")
@@ -108,8 +112,12 @@ export default async function JoueurDetailPage({
 
   return (
     <DashboardShell
-      title={`${player.last_name} ${player.first_name}`}
-      subtitle={player.matricule}
+      title={playerName}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Joueurs", href: "/dashboard/joueurs" },
+        { label: playerName },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
       actions={
@@ -117,14 +125,14 @@ export default async function JoueurDetailPage({
           {canManage && !player.is_archived && (
             <Link
               href={`/dashboard/joueurs/${player.id}/modifier`}
-              className="rounded-full bg-green-800 px-5 py-2 text-sm font-medium text-white transition hover:bg-green-700"
+              className={primaryActionClass}
             >
               Modifier
             </Link>
           )}
           <Link
             href="/dashboard/joueurs"
-            className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800 transition hover:bg-green-50"
+            className={navActionClass}
           >
             Retour à la liste
           </Link>
@@ -139,10 +147,14 @@ export default async function JoueurDetailPage({
           size="xl"
         />
         <div>
-          <p className="text-sm text-green-700">Photo de profil</p>
-          <p className="mt-1 text-green-900">
+          <p className="text-lg font-semibold text-green-900">{playerName}</p>
+          <p className={matriculeClass}>
+            {player.matricule}
+            {player.team ? ` · ${player.team}` : ""}
+          </p>
+          <p className="mt-2 text-sm text-slate-600">
             {player.photo_url
-              ? "Photo enregistrée"
+              ? "Photo de profil enregistrée"
               : "Aucune photo — le parent ou le joueur peut en déposer une depuis Documents"}
           </p>
         </div>
@@ -161,7 +173,13 @@ export default async function JoueurDetailPage({
                   className="rounded-2xl border border-green-200 bg-white p-4 shadow-sm"
                 >
                   <p className="text-sm text-green-700">{label}</p>
-                  <p className="mt-1 font-medium text-green-900">{value}</p>
+                  {label === "Téléphone" && player.phone ? (
+                    <div className="mt-1">
+                      <PhoneDisplay phone={player.phone} className="text-base" />
+                    </div>
+                  ) : (
+                    <p className="mt-1 font-medium text-green-900">{value}</p>
+                  )}
                 </div>
               ))}
             </div>

@@ -1,9 +1,21 @@
 import Link from "next/link";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { EQUIPMENT_STATUS_LABELS } from "@/lib/club-modules/constants";
 import { ClubSection } from "@/components/club-ui";
+import { PlayerAvatar } from "@/components/player-avatar";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableHead,
+  DataTableTh,
+  ListCount,
+} from "@/components/data-table";
+import {
+  ClickableTableRow,
+  PlayerCellLink,
+} from "@/components/clickable-table-row";
+import { matriculeClass, navActionClass, rowCompact } from "@/lib/dashboard-ui";
 import { EquipmentForms } from "./equipment-client";
 import { unwrapRelation } from "@/lib/supabase/relation";
 
@@ -18,7 +30,7 @@ export default async function EquipementPage({
 
   let playerQuery = supabase
     .from("players")
-    .select("id, first_name, last_name, matricule, team")
+    .select("id, first_name, last_name, matricule, team, photo_url")
     .eq("is_archived", false)
     .order("last_name");
   if (groupe) playerQuery = playerQuery.eq("team", groupe);
@@ -26,7 +38,7 @@ export default async function EquipementPage({
   const { data: players } = await playerQuery;
   const { data: equipment } = await supabase
     .from("player_equipment")
-    .select("*, players(first_name, last_name, team, matricule)");
+    .select("*, players(first_name, last_name, team, matricule, photo_url)");
   const { data: inventory } = await supabase
     .from("equipment_inventory")
     .select("*")
@@ -43,47 +55,89 @@ export default async function EquipementPage({
     ? equipment?.filter((e) => unwrapRelation(e.players)?.team === groupe)
     : equipment;
 
+  const rows = filteredEquipment ?? [];
+
   return (
     <DashboardShell
       title="Équipement"
-      subtitle={groupe ? `${groupe} — ${CLUB.name}` : CLUB.name}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Vie du club", href: "/dashboard/club" },
+        { label: "Équipement" },
+        ...(groupe ? [{ label: groupe }] : []),
+      ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
-      actions={<Link href="/dashboard/club" className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800">Retour</Link>}
+      actions={
+        <Link
+          href="/dashboard/club"
+          className={navActionClass}
+        >
+          Retour
+        </Link>
+      }
     >
-      <EquipmentForms
-        players={playerOptions}
-        inventory={inventory ?? []}
-      />
+      <EquipmentForms players={playerOptions} inventory={inventory ?? []} />
 
       <ClubSection title="État par joueur">
-        <div className="overflow-x-auto rounded-2xl border border-green-200 bg-white shadow-sm">
-          <table className="min-w-full text-sm">
-            <thead className="bg-green-800 text-green-100">
-              <tr>
-                <th className="px-4 py-3 text-left">Joueur</th>
-                <th className="px-4 py-3 text-left">Maillot</th>
-                <th className="px-4 py-3 text-left">Short</th>
-                <th className="px-4 py-3 text-left">Protège-tibias</th>
-                <th className="px-4 py-3 text-left">Pointure</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-green-100">
-              {(filteredEquipment ?? []).map((row) => {
-                const p = unwrapRelation(row.players);
-                return (
-                  <tr key={row.player_id}>
-                    <td className="px-4 py-3">{p ? `${p.last_name} ${p.first_name}` : "—"}</td>
-                    <td className="px-4 py-3">{EQUIPMENT_STATUS_LABELS[row.jersey_status]}</td>
-                    <td className="px-4 py-3">{EQUIPMENT_STATUS_LABELS[row.shorts_status]}</td>
-                    <td className="px-4 py-3">{EQUIPMENT_STATUS_LABELS[row.shin_guards_status]}</td>
-                    <td className="px-4 py-3">{row.shoe_size ?? "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          count={
+            <ListCount count={rows.length} label="joueur" labelPlural="joueurs" />
+          }
+        >
+          <DataTableHead>
+            <tr>
+              <DataTableTh>Joueur</DataTableTh>
+              <DataTableTh>Maillot</DataTableTh>
+              <DataTableTh>Short</DataTableTh>
+              <DataTableTh>Protège-tibias</DataTableTh>
+              <DataTableTh>Pointure</DataTableTh>
+              <DataTableTh className="w-10" />
+            </tr>
+          </DataTableHead>
+          <DataTableBody>
+            {rows.map((row) => {
+              const p = unwrapRelation(row.players);
+              const href = `/dashboard/joueurs/${row.player_id}`;
+              return (
+                <ClickableTableRow key={row.player_id} href={href}>
+                  <PlayerCellLink href={href}>
+                    <div className="flex items-center gap-3">
+                      {p ? (
+                        <>
+                          <PlayerAvatar
+                            photoPath={p.photo_url}
+                            firstName={p.first_name}
+                            lastName={p.last_name}
+                            size="sm"
+                          />
+                          <div className="min-w-0">
+                            <p className="font-medium text-green-900">
+                              {p.last_name} {p.first_name}
+                            </p>
+                            <p className={matriculeClass}>{p.matricule}</p>
+                          </div>
+                        </>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </div>
+                  </PlayerCellLink>
+                  <td className={rowCompact}>
+                    {EQUIPMENT_STATUS_LABELS[row.jersey_status]}
+                  </td>
+                  <td className={rowCompact}>
+                    {EQUIPMENT_STATUS_LABELS[row.shorts_status]}
+                  </td>
+                  <td className={rowCompact}>
+                    {EQUIPMENT_STATUS_LABELS[row.shin_guards_status]}
+                  </td>
+                  <td className={rowCompact}>{row.shoe_size ?? "—"}</td>
+                </ClickableTableRow>
+              );
+            })}
+          </DataTableBody>
+        </DataTable>
       </ClubSection>
     </DashboardShell>
   );

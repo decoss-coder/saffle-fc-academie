@@ -6,10 +6,12 @@ import {
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { formatCategory } from "@/lib/players/constants";
 import { redirect } from "next/navigation";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { ClickableCard } from "@/components/clickable-card";
+import { EmptyState } from "@/components/empty-state";
+import { matriculeClass } from "@/lib/dashboard-ui";
 
 export default async function ParentHomePage() {
   const { user, profile } = await requireUser();
@@ -31,44 +33,45 @@ export default async function ParentHomePage() {
   return (
     <DashboardShell
       title="Mes enfants"
-      subtitle={`Espace parent — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Famille", href: "/dashboard" },
+        { label: "Mes enfants" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
       {!players?.length ? (
-        <div className="rounded-2xl border border-dashed border-green-300 bg-white p-10 text-center">
-          <p className="text-green-800">
-            Aucun enfant lié à votre compte pour le moment.
-          </p>
-          <p className="mt-2 text-sm text-green-700">
+        <EmptyState message="Aucun enfant lié à votre compte pour le moment.">
+          <p className="text-sm text-green-700">
             Contactez le club si votre enfant est inscrit avec votre numéro de
             téléphone.
           </p>
-        </div>
+        </EmptyState>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {players.map((player) => (
-            <article
-              key={player.id}
-              className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm"
-            >
-              <div className="flex items-start gap-4">
-                <PlayerAvatar
-                  photoPath={player.photo_url}
-                  firstName={player.first_name}
-                  lastName={player.last_name}
-                  size="md"
-                />
-                <div className="min-w-0 flex-1">
-              <p className="font-mono text-sm text-green-700">{player.matricule}</p>
-              <h2 className="mt-1 text-xl font-semibold text-green-900">
-                {player.last_name} {player.first_name}
-              </h2>
-              <p className="mt-2 text-sm text-green-700">
-                {formatCategory(player.category)}
-                {player.team ? ` · ${player.team}` : ""}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+            <div key={player.id} className="space-y-4">
+              <ClickableCard href={`/dashboard/joueurs/${player.id}`}>
+                <div className="flex items-start gap-4">
+                  <PlayerAvatar
+                    photoPath={player.photo_url}
+                    firstName={player.first_name}
+                    lastName={player.last_name}
+                    size="md"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className={matriculeClass}>{player.matricule}</p>
+                    <h2 className="mt-1 text-xl font-semibold text-green-900">
+                      {player.last_name} {player.first_name}
+                    </h2>
+                    <p className="mt-2 text-sm text-green-700">
+                      {formatCategory(player.category)}
+                      {player.team ? ` · ${player.team}` : ""}
+                    </p>
+                  </div>
+                </div>
+              </ClickableCard>
+              <div className="flex flex-wrap gap-2 px-1">
                 <Link
                   href="/dashboard/mes-documents"
                   className="rounded-full border border-green-300 px-4 py-2 text-sm text-green-800 hover:bg-green-50"
@@ -88,9 +91,7 @@ export default async function ParentHomePage() {
                   Paiements
                 </Link>
               </div>
-                </div>
-              </div>
-            </article>
+            </div>
           ))}
         </div>
       )}

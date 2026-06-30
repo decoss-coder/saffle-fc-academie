@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { DashboardShell, requireConvocationStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
-import { formatCategory } from "@/lib/players/constants";
+import { ClickableCard } from "@/components/clickable-card";
+import { EmptyState } from "@/components/empty-state";
 import {
   formatDateTime,
   formatEventType,
@@ -17,7 +16,7 @@ export default async function ConvocationsPage() {
 
   const { data: players } = await supabase
     .from("players")
-    .select("id, first_name, last_name, matricule, category")
+    .select("id, first_name, last_name, matricule, category, team")
     .eq("is_archived", false)
     .order("last_name");
 
@@ -30,14 +29,20 @@ export default async function ConvocationsPage() {
   const playerOptions =
     players?.map((p) => ({
       id: p.id,
-      label: `${p.last_name} ${p.first_name} · ${formatCategory(p.category)}`,
+      first_name: p.first_name,
+      last_name: p.last_name,
+      matricule: p.matricule,
       category: p.category,
+      team: p.team,
     })) ?? [];
 
   return (
     <DashboardShell
       title="Convocations"
-      subtitle={`Entraînements et matchs — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Convocations" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
@@ -46,22 +51,18 @@ export default async function ConvocationsPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-medium text-green-900">Convocations récentes</h2>
         {!convocations?.length ? (
-          <p className="text-sm text-green-700">Aucune convocation.</p>
+          <EmptyState message="Aucune convocation." />
         ) : (
           <div className="space-y-3">
             {convocations.map((c) => (
-              <Link
-                key={c.id}
-                href={`/dashboard/convocations/${c.id}`}
-                className="block rounded-2xl border border-green-200 bg-white p-5 shadow-sm transition hover:border-green-400 hover:bg-green-50"
-              >
+              <ClickableCard key={c.id} href={`/dashboard/convocations/${c.id}`}>
                 <p className="text-sm text-green-700">{formatEventType(c.event_type)}</p>
                 <h3 className="text-lg font-semibold text-green-900">{c.title}</h3>
                 <p className="mt-1 text-sm text-green-700">
                   {formatDateTime(c.event_date)}
                   {c.location ? ` · ${c.location}` : ""}
                 </p>
-              </Link>
+              </ClickableCard>
             ))}
           </div>
         )}

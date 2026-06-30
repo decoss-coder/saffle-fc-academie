@@ -1,9 +1,21 @@
 import { DashboardShell, requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
-import { formatPhoneDisplay } from "@/lib/phone";
 import { formatRole } from "@/lib/roles";
+import { rowCompact } from "@/lib/dashboard-ui";
+import { EmptyState } from "@/components/empty-state";
+import { InfoBanner } from "@/components/info-banner";
+import { StatusBadge } from "@/components/status-badge";
+import { PhoneDisplay } from "@/components/phone-display";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableHead,
+  DataTableTh,
+  ListCount,
+} from "@/components/data-table";
 import { registerStaffPhone } from "./actions";
+import { ImportMembersButton } from "./import-members-button";
+import { MemberRowActions } from "./member-row-actions";
 import { StaffPhoneForm } from "./staff-phone-form";
 
 export default async function AdminTelephonesPage() {
@@ -25,68 +37,84 @@ export default async function AdminTelephonesPage() {
   return (
     <DashboardShell
       title="Membres & accès"
-      subtitle={`Bureau, staff et téléphones — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Administration", href: "/dashboard" },
+        { label: "Membres" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-5 text-sm text-green-800">
-        <p className="font-medium text-green-900">Import en masse</p>
-        <p className="mt-1">
-          Pour enregistrer le bureau, les joueurs U12 et U16 d&apos;un coup,
-          exécutez le script{" "}
-          <code className="rounded bg-white px-1">supabase/scripts/seed_saffle_members.sql</code>{" "}
-          dans Supabase SQL Editor.
+      <InfoBanner title="Import en masse">
+        <p>
+          Enregistrez le bureau, les joueurs U12 et U16 en un clic. L&apos;import
+          est idempotent : les membres déjà présents ne sont pas dupliqués.
         </p>
-        <p className="mt-2 text-green-700">
+        <p className="mt-2 text-slate-600">
           {playerCount ?? 0} joueur(s) actif(s) en base actuellement.
         </p>
-      </div>
+        <div className="mt-3">
+          <ImportMembersButton />
+        </div>
+      </InfoBanner>
 
       <StaffPhoneForm action={registerStaffPhone} />
 
-      <section className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-green-100 text-sm">
-          <thead className="bg-green-800 text-left text-green-100">
+      <DataTable
+        count={
+          <ListCount
+            count={entries?.length ?? 0}
+            label="membre"
+            labelPlural="membres"
+          />
+        }
+      >
+        <DataTableHead>
+          <tr>
+            <DataTableTh>Téléphone</DataTableTh>
+            <DataTableTh>Nom</DataTableTh>
+            <DataTableTh>Poste</DataTableTh>
+            <DataTableTh>Statut</DataTableTh>
+            <DataTableTh>Actions</DataTableTh>
+          </tr>
+        </DataTableHead>
+        <DataTableBody>
+          {!entries?.length ? (
             <tr>
-              <th className="px-4 py-3 font-medium">Téléphone</th>
-              <th className="px-4 py-3 font-medium">Nom</th>
-              <th className="px-4 py-3 font-medium">Poste</th>
-              <th className="px-4 py-3 font-medium">Statut</th>
+              <td colSpan={5} className="px-4 py-8">
+                <EmptyState message="Aucun membre enregistré. Utilisez l'import ou ajoutez un membre ci-dessus." />
+              </td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-green-100">
-            {!entries?.length ? (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-green-700">
-                  Aucun membre enregistré. Lancez le script d&apos;import ou
-                  ajoutez un membre ci-dessus.
+          ) : (
+            entries.map((entry) => (
+              <tr key={entry.phone_normalized} className="hover:bg-green-50">
+                <td className={rowCompact}>
+                  <PhoneDisplay phone={entry.phone_normalized} />
+                </td>
+                <td className={rowCompact}>{entry.full_name ?? "—"}</td>
+                <td className={`${rowCompact} text-green-800`}>
+                  {formatRole(entry.role, entry.position_title)}
+                </td>
+                <td className={rowCompact}>
+                  {entry.linked_user_id ? (
+                    <StatusBadge label="Compte activé" variant="good" />
+                  ) : (
+                    <StatusBadge
+                      label="En attente d'activation"
+                      variant="warn"
+                    />
+                  )}
+                </td>
+                <td className={rowCompact}>
+                  <MemberRowActions
+                    phone={entry.phone_normalized}
+                    linkedUserId={entry.linked_user_id}
+                  />
                 </td>
               </tr>
-            ) : (
-              entries.map((entry) => (
-                <tr key={entry.phone_normalized} className="hover:bg-green-50">
-                  <td className="px-4 py-3 font-mono text-green-800">
-                    {formatPhoneDisplay(entry.phone_normalized)}
-                  </td>
-                  <td className="px-4 py-3">{entry.full_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-green-800">
-                    {formatRole(entry.role, entry.position_title)}
-                  </td>
-                  <td className="px-4 py-3">
-                    {entry.linked_user_id ? (
-                      <span className="text-green-700">Compte activé</span>
-                    ) : (
-                      <span className="text-amber-700">
-                        En attente d&apos;activation
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </section>
+            ))
+          )}
+        </DataTableBody>
+      </DataTable>
     </DashboardShell>
   );
 }

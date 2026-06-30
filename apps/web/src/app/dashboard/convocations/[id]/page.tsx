@@ -2,14 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell, requireConvocationStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import {
   formatDateTime,
-  formatEventType,
   RESPONSE_STATUS_LABELS,
 } from "@/lib/convocations/constants";
 import { unwrapRelation } from "@/lib/supabase/relation";
 import { ConvocationAttendanceForm } from "@/components/convocation-attendance-form";
+import { navActionClass } from "@/lib/dashboard-ui";
 
 export default async function ConvocationDetailPage({
   params,
@@ -58,13 +57,17 @@ export default async function ConvocationDetailPage({
   return (
     <DashboardShell
       title={convocation.title}
-      subtitle={formatEventType(convocation.event_type)}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Convocations", href: "/dashboard/convocations" },
+        { label: convocation.title },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
       actions={
         <Link
           href="/dashboard/convocations"
-          className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800 hover:bg-green-50"
+          className={navActionClass}
         >
           Retour
         </Link>

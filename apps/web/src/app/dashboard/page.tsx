@@ -11,7 +11,6 @@ import {
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 
 export default async function DashboardPage() {
   const { user, profile } = await requireUser();
@@ -40,7 +39,11 @@ export default async function DashboardPage() {
     return (
       <DashboardShell
         title={`Bonjour ${profile.full_name || "!"}`}
-        subtitle={`Espace parent — ${CLUB.name}. Suivez les enfants, les convocations et les cotisations sans perdre le fil.`}
+        breadcrumbs={[
+          { label: "Pilotage", href: "/dashboard" },
+          { label: "Accueil" },
+        ]}
+        subtitle="Suivez les enfants, les convocations et les cotisations sans perdre le fil."
         userName={profile.full_name || user.email || "Utilisateur"}
         userRole={role}
       >
@@ -201,7 +204,11 @@ export default async function DashboardPage() {
   return (
     <DashboardShell
       title={`Bonjour ${profile.full_name || "!"}`}
-      subtitle={`Tableau de bord — ${CLUB.name}. Une console claire pour décider vite et agir proprement.`}
+      breadcrumbs={[
+        { label: "Pilotage", href: "/dashboard" },
+        { label: "Accueil" },
+      ]}
+      subtitle="Une console claire pour décider vite et agir proprement."
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={role}
     >

@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { navActionClass } from "@/lib/dashboard-ui";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { ClubSection } from "@/components/club-ui";
 import { WelfareForm, WelfareList } from "./aides-client";
 import { canApproveWelfare } from "@/lib/auth";
@@ -24,10 +24,14 @@ export default async function AidesPage() {
   return (
     <DashboardShell
       title="Aides sociales"
-      subtitle={CLUB.name}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Vie du club", href: "/dashboard/club" },
+        { label: "Aides sociales" },
+      ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
-      actions={<Link href="/dashboard/club" className="rounded-full border border-green-300 px-5 py-2 text-sm text-green-800">Retour</Link>}
+      actions={<Link href="/dashboard/club" className={navActionClass}>Retour</Link>}
     >
       <WelfareForm
         players={

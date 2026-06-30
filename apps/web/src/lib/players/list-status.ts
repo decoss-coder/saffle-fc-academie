@@ -1,4 +1,6 @@
-export type StatusVariant = "good" | "warn" | "bad" | "neutral";
+import { formatRelativeDate, type StatusVariant } from "@/lib/dashboard-ui";
+
+export type { StatusVariant };
 
 export type PlayerListStatus = {
   label: string;
@@ -22,7 +24,7 @@ export function summarizePaymentStatus(dues: DueRow[]): PlayerListStatus {
 
   if (!active.length) {
     return {
-      label: "—",
+      label: "Aucune",
       variant: "neutral",
       title: "Aucune cotisation enregistrée",
     };
@@ -79,7 +81,7 @@ export function summarizeAttendanceStatus(
 ): PlayerListStatus {
   if (!attendance) {
     return {
-      label: "—",
+      label: "Aucune",
       variant: "neutral",
       title: "Aucune séance d'entraînement passée enregistrée",
     };
@@ -87,25 +89,17 @@ export function summarizeAttendanceStatus(
 
   const mapped =
     ATTENDANCE_LABELS[attendance.response] ?? ATTENDANCE_LABELS.pending;
-  const dateLabel = attendance.sessionDate
-    ? new Intl.DateTimeFormat("fr-CI", {
-        day: "2-digit",
-        month: "short",
-      }).format(new Date(attendance.sessionDate))
+  const relative = attendance.sessionDate
+    ? formatRelativeDate(attendance.sessionDate)
     : "";
 
   return {
-    label: mapped.label,
+    label: relative ? `${mapped.label} · ${relative}` : mapped.label,
     variant: mapped.variant,
     title: attendance.sessionTitle
-      ? `Dernière séance : ${attendance.sessionTitle}${dateLabel ? ` (${dateLabel})` : ""}`
+      ? `Dernière séance : ${attendance.sessionTitle}${relative ? ` (${relative})` : ""}`
       : mapped.label,
   };
 }
 
-export const STATUS_VARIANT_CLASSES: Record<StatusVariant, string> = {
-  good: "bg-green-100 text-green-900",
-  warn: "bg-amber-100 text-amber-900",
-  bad: "bg-red-100 text-red-900",
-  neutral: "bg-gray-100 text-gray-700",
-};
+export { STATUS_VARIANT_CLASSES } from "@/lib/dashboard-ui";

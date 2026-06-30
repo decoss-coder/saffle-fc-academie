@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB } from "@/lib/club";
 import { PlayerDocumentsList } from "@/components/player-documents-list";
 import { unwrapRelation } from "@/lib/supabase/relation";
 
@@ -60,7 +59,10 @@ export default async function StaffDocumentsPage({
   return (
     <DashboardShell
       title="Documents joueurs"
-      subtitle={`Validation — ${CLUB.name}`}
+      breadcrumbs={[
+        { label: "Club", href: "/dashboard" },
+        { label: "Documents" },
+      ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
