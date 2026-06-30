@@ -57,6 +57,14 @@ export function canManageConvocations(role: string) {
   return CONVOCATION_ROLES.has(role);
 }
 
+export function canManageClub(role: string) {
+  return MANAGE_PLAYERS_ROLES.has(role) || TREASURER_ROLES.has(role);
+}
+
+export function canApproveWelfare(role: string) {
+  return ADMIN_ROLES.has(role);
+}
+
 export function isParentRole(role: string) {
   return PARENT_ROLES.has(role);
 }

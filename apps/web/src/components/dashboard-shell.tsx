@@ -3,6 +3,7 @@ import Image from "next/image";
 import { signOut } from "@/app/auth/actions";
 import { CLUB } from "@/lib/club";
 import {
+  canManageClub,
   canManageConvocations,
   canManagePayments,
   canManagePhones,
@@ -49,6 +50,10 @@ function buildNavItems(userRole: string) {
 
   if (canManageConvocations(userRole)) {
     items.push({ href: "/dashboard/convocations", label: "Convocations" });
+  }
+
+  if (canManageClub(userRole)) {
+    items.push({ href: "/dashboard/club", label: "Vie du club" });
   }
 
   if (canManagePayments(userRole)) {

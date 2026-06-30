@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireConvocationStaff, requireUser } from "@/lib/auth";
+import { checkAbsenceThreshold } from "@/app/dashboard/club/actions";
 import { notifyPlayerStakeholders } from "@/lib/notifications/actions";
 import { unwrapRelation } from "@/lib/supabase/relation";
 
@@ -182,6 +183,7 @@ export async function updateConvocationAttendance(
         link: presencesLink,
         excludeUserId: user.id,
       });
+      await checkAbsenceThreshold(entry.player_id, playerName);
     }
 
     if (response === "late" && entry.response !== "late") {

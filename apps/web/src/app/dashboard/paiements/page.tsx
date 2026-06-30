@@ -86,7 +86,7 @@ export default async function PaiementsPage({
     <DashboardShell
       title="Paiements"
       subtitle={`${activeGroup?.label ?? activeTeam} — ${CLUB.name}`}
-      userName={profile.full_name || user.email || "Utilisateur"}
+      userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
     >
       {params.wave === "success" && (
