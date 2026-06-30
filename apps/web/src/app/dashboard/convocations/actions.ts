@@ -85,5 +85,64 @@ export async function respondConvocation(
   revalidatePath("/dashboard/parent/convocations");
   revalidatePath("/dashboard/parent");
   revalidatePath("/dashboard/convocations");
+  revalidatePath("/dashboard/joueurs");
   return { success: "Réponse enregistrée." };
+}
+
+export async function updateConvocationAttendance(
+  _prev: ConvocationFormState,
+  formData: FormData,
+): Promise<ConvocationFormState> {
+  const { user } = await requireConvocationStaff();
+  const supabase = await createClient();
+
+  const convocationId = String(formData.get("convocation_id") ?? "").trim();
+  if (!convocationId) {
+    return { error: "Convocation introuvable." };
+  }
+
+  const { data: convocation } = await supabase
+    .from("convocations")
+    .select("id, event_type")
+    .eq("id", convocationId)
+    .maybeSingle();
+
+  if (!convocation || convocation.event_type !== "training") {
+    return { error: "Cette convocation n'est pas un entraînement." };
+  }
+
+  const { data: entries } = await supabase
+    .from("convocation_entries")
+    .select("id")
+    .eq("convocation_id", convocationId);
+
+  const allowed = new Set([
+    "pending",
+    "confirmed",
+    "declined",
+    "late",
+    "absent",
+  ]);
+
+  for (const entry of entries ?? []) {
+    const response = String(formData.get(`response_${entry.id}`) ?? "").trim();
+    if (!response || !allowed.has(response)) continue;
+
+    const { error } = await supabase
+      .from("convocation_entries")
+      .update({
+        response,
+        responded_at: new Date().toISOString(),
+        responded_by: user.id,
+      })
+      .eq("id", entry.id);
+
+    if (error) {
+      return { error: "Impossible d'enregistrer les présences." };
+    }
+  }
+
+  revalidatePath(`/dashboard/convocations/${convocationId}`);
+  revalidatePath("/dashboard/joueurs");
+  return { success: "Présences enregistrées." };
 }

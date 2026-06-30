@@ -4,12 +4,21 @@ import { PLAYER_GROUPS } from "@/lib/players/constants";
 type PlayerListTabsProps = {
   activeTeam: string;
   counts: Record<string, number>;
+  searchQuery?: string;
 };
 
-export function PlayerListTabs({ activeTeam, counts }: PlayerListTabsProps) {
+export function PlayerListTabs({
+  activeTeam,
+  counts,
+  searchQuery,
+}: PlayerListTabsProps) {
+  const querySuffix = searchQuery
+    ? `&q=${encodeURIComponent(searchQuery)}`
+    : "";
+
   return (
     <nav
-      className="flex flex-wrap gap-2 border-b border-green-200 pb-1"
+      className="flex flex-wrap gap-2 border-b border-green-200 pb-1 sm:border-b-0"
       aria-label="Groupes de joueurs"
     >
       {PLAYER_GROUPS.map((group) => {
@@ -20,7 +29,7 @@ export function PlayerListTabs({ activeTeam, counts }: PlayerListTabsProps) {
         return (
           <Link
             key={group.team}
-            href={`/dashboard/joueurs?groupe=${encodeURIComponent(group.team)}`}
+            href={`/dashboard/joueurs?groupe=${encodeURIComponent(group.team)}${querySuffix}`}
             className={`rounded-t-xl px-4 py-2.5 text-sm font-medium transition ${
               isActive
                 ? "bg-green-800 text-white shadow-sm"

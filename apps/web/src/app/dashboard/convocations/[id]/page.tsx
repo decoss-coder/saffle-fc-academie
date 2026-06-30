@@ -9,6 +9,7 @@ import {
   RESPONSE_STATUS_LABELS,
 } from "@/lib/convocations/constants";
 import { unwrapRelation } from "@/lib/supabase/relation";
+import { ConvocationAttendanceForm } from "@/components/convocation-attendance-form";
 
 export default async function ConvocationDetailPage({
   params,
@@ -38,6 +39,20 @@ export default async function ConvocationDetailPage({
     .eq("convocation_id", id);
 
   const pending = entries?.filter((e) => e.response === "pending").length ?? 0;
+  const isTraining = convocation.event_type === "training";
+  const isPast = new Date(convocation.event_date).getTime() <= Date.now();
+
+  const attendanceEntries =
+    entries?.map((entry) => {
+      const player = unwrapRelation(entry.players);
+      return {
+        id: entry.id,
+        response: entry.response,
+        playerName: player
+          ? `${player.last_name} ${player.first_name}`
+          : "Joueur",
+      };
+    }) ?? [];
 
   return (
     <DashboardShell
@@ -67,12 +82,20 @@ export default async function ConvocationDetailPage({
         </p>
       </div>
 
+      {isTraining && isPast && (
+        <ConvocationAttendanceForm
+          convocationId={convocation.id}
+          isTraining={isTraining}
+          entries={attendanceEntries}
+        />
+      )}
+
       <div className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
         <table className="min-w-full text-sm">
           <thead className="bg-green-800 text-green-100">
             <tr>
               <th className="px-4 py-3 text-left">Joueur</th>
-              <th className="px-4 py-3 text-left">Réponse</th>
+              <th className="px-4 py-3 text-left">Réponse / Présence</th>
               <th className="px-4 py-3 text-left">Commentaire</th>
             </tr>
           </thead>
@@ -80,20 +103,20 @@ export default async function ConvocationDetailPage({
             {entries?.map((entry) => {
               const player = unwrapRelation(entry.players);
               return (
-              <tr key={entry.id}>
-                <td className="px-4 py-3">
-                  {player
-                    ? `${player.last_name} ${player.first_name}`
-                    : "—"}
-                </td>
-                <td className="px-4 py-3">
-                  {RESPONSE_STATUS_LABELS[entry.response] ?? entry.response}
-                </td>
-                <td className="px-4 py-3 text-green-700">
-                  {entry.response_comment ?? "—"}
-                </td>
-              </tr>
-            );
+                <tr key={entry.id}>
+                  <td className="px-4 py-3">
+                    {player
+                      ? `${player.last_name} ${player.first_name}`
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {RESPONSE_STATUS_LABELS[entry.response] ?? entry.response}
+                  </td>
+                  <td className="px-4 py-3 text-green-700">
+                    {entry.response_comment ?? "—"}
+                  </td>
+                </tr>
+              );
             })}
           </tbody>
         </table>
