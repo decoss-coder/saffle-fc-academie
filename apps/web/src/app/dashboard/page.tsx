@@ -1,59 +1,35 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { DashboardShell, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/auth/actions";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export default async function DashboardPage() {
-  if (!isSupabaseConfigured()) {
-    redirect("/login");
-  }
-
+  const { user, profile } = await requireUser();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  const { count } = await supabase
+    .from("players")
+    .select("*", { count: "exact", head: true })
+    .eq("is_archived", false);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role")
-    .eq("id", user.id)
-    .maybeSingle();
+  const modules = [
+    {
+      title: "Joueurs",
+      href: "/dashboard/joueurs",
+      status: `${count ?? 0} joueur(s) actif(s)`,
+    },
+    { title: "Convocations", href: "#", status: "À venir" },
+    { title: "Paiements", href: "#", status: "À venir (Wave / FCFA)" },
+  ];
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-12">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-400">
-            Tableau de bord
-          </p>
-          <h1 className="text-3xl font-semibold">
-            Bonjour {profile?.full_name || user.email}
-          </h1>
-          <p className="mt-2 text-zinc-400">
-            Rôle : {profile?.role ?? "parent"}
-          </p>
-        </div>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="rounded-full border border-zinc-700 px-5 py-2 text-sm transition hover:border-zinc-500"
-          >
-            Déconnexion
-          </button>
-        </form>
-      </div>
-
+    <DashboardShell
+      title={`Bonjour ${profile.full_name || "!"}`}
+      subtitle="Tableau de bord — SAFFLE FC Académie, Sinfra"
+      userName={profile.full_name || user.email || "Utilisateur"}
+      userRole={profile.role}
+    >
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[
-          { title: "Joueurs", href: "#", status: "À venir" },
-          { title: "Convocations", href: "#", status: "À venir" },
-          { title: "Paiements", href: "#", status: "À venir" },
-        ].map((item) => (
+        {modules.map((item) => (
           <Link
             key={item.title}
             href={item.href}
@@ -64,6 +40,6 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </section>
-    </div>
+    </DashboardShell>
   );
 }

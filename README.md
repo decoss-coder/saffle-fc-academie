@@ -77,7 +77,9 @@ Le déploiement automatique est activé à chaque push sur `main`.
 ## Configuration Supabase (requis pour l'auth)
 
 1. Créer un projet sur [supabase.com/dashboard](https://supabase.com/dashboard)
-2. Exécuter la migration SQL : `supabase/migrations/20250629210000_initial_schema.sql`
+2. Exécuter les migrations SQL (dans l'ordre) :
+   - `supabase/migrations/20250629210000_initial_schema.sql`
+   - `supabase/migrations/20250630220000_players_write_policies.sql`
 3. Copier les clés API (Settings → API)
 4. Ajouter dans **Vercel** → Project → Settings → Environment Variables :
    - `NEXT_PUBLIC_SUPABASE_URL`
