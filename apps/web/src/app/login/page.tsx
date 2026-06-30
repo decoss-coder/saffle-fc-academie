@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
+import { AuthLayout } from "@/components/auth-layout";
 import { signIn } from "@/app/auth/actions";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -12,37 +13,29 @@ export default async function LoginPage({
   const configured = isSupabaseConfigured();
 
   return (
-    <div className="flex flex-1 items-center justify-center px-6 py-16">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-400">
-          Connexion
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold">Accéder à la plateforme</h1>
-
-        {!configured ? (
-          <div className="mt-6 space-y-4">
-            <p className="text-sm text-zinc-400">
-              Supabase n&apos;est pas encore configuré. Ajoutez les variables
-              d&apos;environnement dans Vercel et localement.
+    <AuthLayout title="Accéder à la plateforme" subtitle="Connexion">
+      {!configured ? (
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-400">
+            Configuration Supabase en cours. Réessayez dans quelques minutes.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex rounded-full border border-zinc-700 px-5 py-2 text-sm transition hover:border-zinc-500"
+          >
+            Retour à l&apos;accueil
+          </Link>
+        </div>
+      ) : (
+        <>
+          {params.error === "auth_callback_failed" && (
+            <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              La confirmation du lien a échoué. Réessayez.
             </p>
-            <Link
-              href="/"
-              className="inline-flex rounded-full border border-zinc-700 px-5 py-2 text-sm transition hover:border-zinc-500"
-            >
-              Retour à l&apos;accueil
-            </Link>
-          </div>
-        ) : (
-          <div className="mt-6">
-            {params.error === "auth_callback_failed" && (
-              <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                La confirmation du lien a échoué. Réessayez.
-              </p>
-            )}
-            <AuthForm mode="login" action={signIn} />
-          </div>
-        )}
-      </div>
-    </div>
+          )}
+          <AuthForm mode="login" action={signIn} />
+        </>
+      )}
+    </AuthLayout>
   );
 }

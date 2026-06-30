@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { CLUB } from "@/lib/club";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,9 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SAFFLE FC Académie — Sinfra, Côte d'Ivoire",
-  description:
-    "Plateforme officielle du club SAFFLE FC Académie de Sinfra, Côte d'Ivoire — administration, sport, finances et communication.",
+  title: `${CLUB.name} — ${CLUB.location}`,
+  description: `${CLUB.tagline} à ${CLUB.location}. Plateforme officielle — administration, sport, finances et communication.`,
 };
 
 export default function RootLayout({

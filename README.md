@@ -1,6 +1,6 @@
-# SAFFLE FC Académie
+# SAFFLE FF Académie CI
 
-Plateforme numérique officielle du club **SAFFLE FC Académie**, basé à **Sinfra, Côte d'Ivoire**.
+Plateforme officielle du **SAFFLE FF Académie CI** — centre de formation de football à **Sinfra, Côte d'Ivoire**.
 
 Elle centralise la gestion du club — **web**, **iOS** et **Android** — pour les dirigeants, coaches, parents et joueurs.
 

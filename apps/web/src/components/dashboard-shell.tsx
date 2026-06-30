@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOut } from "@/app/auth/actions";
+import { CLUB } from "@/lib/club";
 
 const navItems = [
   { href: "/dashboard", label: "Accueil" },
@@ -29,7 +30,7 @@ export function DashboardShell({
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-400">
-              SAFFLE FC Académie · Sinfra
+              {CLUB.name} · {CLUB.city}
             </p>
             <p className="text-sm text-zinc-400">
               {userName} · {userRole}

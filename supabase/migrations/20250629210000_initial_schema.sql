@@ -165,6 +165,20 @@ alter table public.player_dues enable row level security;
 alter table public.payments enable row level security;
 alter table public.payment_audit_logs enable row level security;
 
+-- Helper RLS (évite la récursion sur profiles)
+create or replace function public.get_my_role()
+returns public.user_role
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select role from public.profiles where id = auth.uid();
+$$;
+
+revoke all on function public.get_my_role() from public;
+grant execute on function public.get_my_role() to authenticated;
+
 -- Profiles policies
 create policy "Users can view own profile"
   on public.profiles for select using (auth.uid() = id);
@@ -172,16 +186,11 @@ create policy "Users can view own profile"
 create policy "Users can update own profile"
   on public.profiles for update using (auth.uid() = id);
 
-create policy "Admins can view all profiles"
+create policy "Staff can view all profiles"
   on public.profiles for select
-  using (
-    exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.role in ('admin', 'president', 'treasurer')
-    )
-  );
+  using (public.get_my_role() in ('admin', 'president', 'treasurer'));
 
--- Players: guardians see linked players
+-- Players
 create policy "Guardians can view linked players"
   on public.players for select
   using (
@@ -190,28 +199,37 @@ create policy "Guardians can view linked players"
       where pg.player_id = players.id and pg.guardian_id = auth.uid()
     )
     or user_id = auth.uid()
-    or exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.role in ('admin', 'coach', 'treasurer', 'president')
-    )
+    or public.get_my_role() in ('admin', 'coach', 'treasurer', 'president')
   );
 
--- Player dues: visible to player, guardians, staff
+create policy "Staff can insert players"
+  on public.players for insert
+  with check (public.get_my_role() in ('admin', 'president', 'coach'));
+
+create policy "Staff can update players"
+  on public.players for update
+  using (public.get_my_role() in ('admin', 'president', 'coach'));
+
+create policy "Staff can view all players"
+  on public.players for select
+  using (public.get_my_role() in ('admin', 'president', 'coach', 'treasurer'));
+
+-- Player dues
 create policy "View player dues"
   on public.player_dues for select
   using (
     exists (select 1 from public.players pl where pl.id = player_dues.player_id and pl.user_id = auth.uid())
     or exists (select 1 from public.player_guardians pg where pg.player_id = player_dues.player_id and pg.guardian_id = auth.uid())
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin', 'treasurer', 'president'))
+    or public.get_my_role() in ('admin', 'treasurer', 'president')
   );
 
--- Payments: same visibility as dues
+-- Payments
 create policy "View payments"
   on public.payments for select
   using (
     exists (select 1 from public.players pl where pl.id = payments.player_id and pl.user_id = auth.uid())
     or exists (select 1 from public.player_guardians pg where pg.player_id = payments.player_id and pg.guardian_id = auth.uid())
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('admin', 'treasurer', 'president'))
+    or public.get_my_role() in ('admin', 'treasurer', 'president')
   );
 
 -- Staff read seasons

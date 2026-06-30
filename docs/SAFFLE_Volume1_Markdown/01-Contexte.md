@@ -1,6 +1,6 @@
 # Contexte
 
-SAFFLE FC Académie est la plateforme numérique du club **SAFFLE FC Académie**, basé à **Sinfra, Côte d'Ivoire**.
+SAFFLE FF Académie CI est la plateforme numérique du centre de formation **SAFFLE FF Académie CI**, basé à **Sinfra, Côte d'Ivoire**.
 
 Elle est destinée à la gestion complète du club : administration, suivi sportif, finances, convocations et communication entre dirigeants, entraîneurs, parents et joueurs.
 
