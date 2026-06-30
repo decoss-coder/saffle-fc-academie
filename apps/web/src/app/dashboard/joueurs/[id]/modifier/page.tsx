@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PlayerForm } from "@/components/player-form";
+import { PlayerPhotoSection } from "@/components/player-photo-section";
 import { updatePlayer } from "@/app/dashboard/joueurs/actions";
 
 export default async function ModifierJoueurPage({
@@ -34,11 +35,19 @@ export default async function ModifierJoueurPage({
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
-      <PlayerForm
+      <div className="space-y-6">
+        <PlayerPhotoSection
+          playerId={player.id}
+          firstName={player.first_name}
+          lastName={player.last_name}
+          photoPath={player.photo_url}
+        />
+        <PlayerForm
         action={updatePlayer}
         player={player}
         cancelHref={`/dashboard/joueurs/${player.id}`}
-      />
+        />
+      </div>
     </DashboardShell>
   );
 }

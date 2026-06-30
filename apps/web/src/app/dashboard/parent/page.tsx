@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CLUB } from "@/lib/club";
 import { formatCategory } from "@/lib/players/constants";
 import { redirect } from "next/navigation";
+import { PlayerAvatar } from "@/components/player-avatar";
 
 export default async function ParentHomePage() {
   const { user, profile } = await requireUser();
@@ -22,7 +23,7 @@ export default async function ParentHomePage() {
   const { data: players } = playerIds.length
     ? await supabase
         .from("players")
-        .select("id, matricule, first_name, last_name, category, team")
+        .select("id, matricule, first_name, last_name, category, team, photo_url")
         .in("id", playerIds)
         .eq("is_archived", false)
     : { data: [] };
@@ -51,6 +52,14 @@ export default async function ParentHomePage() {
               key={player.id}
               className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm"
             >
+              <div className="flex items-start gap-4">
+                <PlayerAvatar
+                  photoPath={player.photo_url}
+                  firstName={player.first_name}
+                  lastName={player.last_name}
+                  size="md"
+                />
+                <div className="min-w-0 flex-1">
               <p className="font-mono text-sm text-green-700">{player.matricule}</p>
               <h2 className="mt-1 text-xl font-semibold text-green-900">
                 {player.last_name} {player.first_name}
@@ -78,6 +87,8 @@ export default async function ParentHomePage() {
                 >
                   Paiements
                 </Link>
+              </div>
+                </div>
               </div>
             </article>
           ))}

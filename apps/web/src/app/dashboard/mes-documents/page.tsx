@@ -8,6 +8,7 @@ import { CLUB } from "@/lib/club";
 import { formatCategory } from "@/lib/players/constants";
 import { DocumentUploadForm } from "@/components/document-upload-form";
 import { PlayerDocumentsList } from "@/components/player-documents-list";
+import { PlayerPhotoSection } from "@/components/player-photo-section";
 
 export default async function MesDocumentsPage() {
   const { user, profile } = await requireDocumentUploader();
@@ -17,7 +18,7 @@ export default async function MesDocumentsPage() {
   const { data: players } = playerIds.length
     ? await supabase
         .from("players")
-        .select("id, matricule, first_name, last_name, category, team")
+        .select("id, matricule, first_name, last_name, category, team, photo_url")
         .in("id", playerIds)
         .eq("is_archived", false)
         .order("last_name", { ascending: true })
@@ -36,7 +37,7 @@ export default async function MesDocumentsPage() {
   return (
     <DashboardShell
       title="Mes documents"
-      subtitle={`Dépôt et suivi — ${CLUB.name}`}
+      subtitle={`Photos de profil et documents — ${CLUB.name}`}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
@@ -75,6 +76,13 @@ export default async function MesDocumentsPage() {
                     {player.team ? ` · ${player.team}` : ""}
                   </p>
                 </div>
+
+                <PlayerPhotoSection
+                  playerId={player.id}
+                  firstName={player.first_name}
+                  lastName={player.last_name}
+                  photoPath={player.photo_url}
+                />
 
                 <DocumentUploadForm
                   playerId={player.id}

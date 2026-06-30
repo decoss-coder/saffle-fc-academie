@@ -12,6 +12,7 @@ import {
   formatGender,
 } from "@/lib/players/constants";
 import { PlayerDocumentsList } from "@/components/player-documents-list";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { archivePlayer } from "@/app/dashboard/joueurs/actions";
 
 function display(value: string | number | null | undefined) {
@@ -130,6 +131,23 @@ export default async function JoueurDetailPage({
         </div>
       }
     >
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+        <PlayerAvatar
+          photoPath={player.photo_url}
+          firstName={player.first_name}
+          lastName={player.last_name}
+          size="xl"
+        />
+        <div>
+          <p className="text-sm text-green-700">Photo de profil</p>
+          <p className="mt-1 text-green-900">
+            {player.photo_url
+              ? "Photo enregistrée"
+              : "Aucune photo — le parent ou le joueur peut en déposer une depuis Documents"}
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-6">
         {sections.map((section) => (
           <section key={section.title}>

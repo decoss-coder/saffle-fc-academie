@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCategory, PLAYER_GROUPS } from "@/lib/players/constants";
 import { CLUB } from "@/lib/club";
 import { PlayerListTabs } from "@/components/player-list-tabs";
+import { PlayerAvatar } from "@/components/player-avatar";
 
 const DEFAULT_GROUP = PLAYER_GROUPS[0].team;
 
@@ -25,7 +26,7 @@ export default async function JoueursPage({
 
   const { data: players } = await supabase
     .from("players")
-    .select("id, matricule, first_name, last_name, category, team, birth_date, is_archived")
+    .select("id, matricule, first_name, last_name, category, team, birth_date, is_archived, photo_url")
     .eq("is_archived", false)
     .order("last_name", { ascending: true });
 
@@ -79,6 +80,7 @@ export default async function JoueursPage({
           <table className="min-w-full divide-y divide-green-100 text-sm">
             <thead className="bg-green-800 text-left text-green-100">
               <tr>
+                <th className="px-4 py-3 font-medium">Photo</th>
                 <th className="px-4 py-3 font-medium">Matricule</th>
                 <th className="px-4 py-3 font-medium">Joueur</th>
                 <th className="px-4 py-3 font-medium">Catégorie</th>
@@ -88,6 +90,14 @@ export default async function JoueursPage({
             <tbody className="divide-y divide-green-100">
               {filtered.map((player) => (
                 <tr key={player.id} className="hover:bg-green-50">
+                  <td className="px-4 py-3">
+                    <PlayerAvatar
+                      photoPath={player.photo_url}
+                      firstName={player.first_name}
+                      lastName={player.last_name}
+                      size="sm"
+                    />
+                  </td>
                   <td className="px-4 py-3 font-mono text-green-700">
                     {player.matricule}
                   </td>
