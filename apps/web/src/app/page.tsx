@@ -19,18 +19,19 @@ export default function Home() {
       <ClubHeader />
 
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-emerald-900/30">
+      <section className="relative min-h-[420px] overflow-hidden border-b border-emerald-900/30 sm:min-h-[480px]">
         <div className="absolute inset-0">
           <Image
             src={CLUB.assets.fanion}
-            alt={`${CLUB.name} — photo d'équipe`}
+            alt={`${CLUB.name} — photo d'équipe avec fanion`}
             fill
-            className="object-cover object-center opacity-40"
+            className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/90 to-zinc-950/60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/95 via-zinc-950/55 to-zinc-950/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/40 via-transparent to-transparent" />
         </div>
-        <div className="relative mx-auto flex max-w-6xl flex-col gap-8 px-6 py-20 sm:py-28 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative mx-auto flex max-w-6xl flex-col justify-center px-6 py-20 sm:py-28">
           <div className="max-w-xl space-y-6">
             <p className="text-sm font-medium uppercase tracking-[0.25em] text-emerald-400">
               {CLUB.tagline}
@@ -57,16 +58,6 @@ export default function Home() {
                 Se connecter
               </Link>
             </div>
-          </div>
-          <div className="flex shrink-0 justify-center lg:justify-end">
-            <Image
-              src={CLUB.assets.logo}
-              alt={`Logo ${CLUB.name}`}
-              width={220}
-              height={220}
-              className="rounded-2xl shadow-2xl ring-4 ring-emerald-500/20"
-              priority
-            />
           </div>
         </div>
       </section>
