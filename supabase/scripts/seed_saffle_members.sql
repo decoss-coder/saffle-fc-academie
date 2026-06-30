@@ -54,15 +54,10 @@ begin
         ('Fonan', 'Coulibaly', '+2250102709087'),
         ('Uriel Nathan', 'Bakouri', '+2250708602259'),
         ('Mohamed', 'Dagnogo', '+2250768220120'),
-        ('Yoro Alaman', 'Tia', '+2250546239699'),
         ('Serge', 'Olou', '+2250748871139'),
         ('Assafe', 'Attahi', '+2250709365594'),
         ('Moye', 'Koffi', '+2250787757075'),
-        ('Samuel', 'Botteli', '+2250779186222'),
-        ('Japhet David', 'Kouassi', '+2250747610599'),
-        ('Kouassi Emmanuel', 'Kouassi', '+2250747610599'),
-        ('Andre Samuel', 'Gbagbo', '+2250707798224'),
-        ('Gedeon', 'Gnandé Têhi', '+2250564001094')
+        ('Samuel', 'Botteli', '+2250779186222')
     ) as t(first_name, last_name, phone)
   loop
     if exists (
@@ -107,7 +102,88 @@ begin
 end;
 $$;
 
+-- ─── JOUEURS ÉQUIPE A (U14-U15 + transferts depuis petits) ─────────
+do $$
+declare
+  v_matricule text;
+  v_counter int := (
+    select count(*)::int from public.players where matricule like 'SFA-2026-%'
+  );
+  rec record;
+begin
+  for rec in
+    select * from (
+      values
+        ('Japhet David', 'Kouassi', '+2250747610599', 'M'),
+        ('Kouabi Emmanuel', 'Kouassi', '+2250747610599', 'M'),
+        ('Andre Samuel', 'Gbagbo', '+2250707798224', 'M'),
+        ('Gedeon', 'Gnandé Têhi', '+2250564001094', 'M'),
+        ('Sinaly', 'Coulibaly', '+2250707732032', 'M'),
+        ('Eli', 'Kramon Bi', '+2250555683721', 'M'),
+        ('Youniqué', 'Coulibaly', '+2250506807604', 'M'),
+        ('Adramane', 'Coulibaly', '+2250544332432', 'M'),
+        ('Yoro', 'Tia', '+2250546239699', 'M'),
+        ('Dramane', 'Traoré', '+2250555524900', 'M'),
+        ('Mediba', 'Bakayoko', '+2250505164467', 'M'),
+        ('Abdoulaye', 'Koné', '+2250707899131', 'M'),
+        ('Lassinan', 'Sidibé', '+2250504482699', 'M'),
+        ('Ahmed', 'Coulibaly', '+2250546919587', 'M'),
+        ('Sabrina', 'Affissou', '+2250757118275', 'F'),
+        ('Agoua', 'Kouame', '+2250708997755', 'M'),
+        ('Ismaël', 'Coulibaly', '+2250506446393', 'M'),
+        ('Alousseni', 'Ballo', '+2250505616025', 'M'),
+        ('Guipa', 'Nioble', '+2250757393961', 'M'),
+        ('Mohamed', 'Fofana', '+2250554103629', 'M'),
+        ('David', 'Tchoko', '+2250747299493', 'M'),
+        ('Isaac', 'Dogbo', '+2250749997778', 'M'),
+        ('Simon', 'Kouassi', '+2250505755250', 'M')
+    ) as t(first_name, last_name, phone, gender)
+  loop
+    if exists (
+      select 1 from public.players p
+      where p.first_name = rec.first_name
+        and p.last_name = rec.last_name
+        and p.team = 'Équipe A'
+    ) then
+      continue;
+    end if;
+
+    v_counter := v_counter + 1;
+    v_matricule := 'SFA-2026-' || lpad(v_counter::text, 3, '0');
+
+    while exists (select 1 from public.players where matricule = v_matricule) loop
+      v_counter := v_counter + 1;
+      v_matricule := 'SFA-2026-' || lpad(v_counter::text, 3, '0');
+    end loop;
+
+    insert into public.players (
+      matricule,
+      first_name,
+      last_name,
+      birth_date,
+      gender,
+      category,
+      team,
+      phone,
+      guardian_name
+    ) values (
+      v_matricule,
+      rec.first_name,
+      rec.last_name,
+      '2010-06-15',
+      rec.gender,
+      'team_a',
+      'Équipe A',
+      rec.phone,
+      rec.last_name || ' ' || rec.first_name
+    );
+  end loop;
+end;
+$$;
+
 -- Vérification rapide
 select 'phone_registry' as table_name, count(*) as total from public.phone_registry
 union all
-select 'players U9-U10', count(*) from public.players where team = 'U9-U10';
+select 'players U9-U10', count(*) from public.players where team = 'U9-U10'
+union all
+select 'players Équipe A', count(*) from public.players where team = 'Équipe A';
