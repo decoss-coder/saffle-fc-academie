@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DashboardShell, requireUser, canManagePlayers } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatCategory } from "@/lib/players/constants";
+import { CLUB } from "@/lib/club";
 
 export default async function JoueursPage() {
   const { user, profile } = await requireUser();
@@ -18,7 +19,7 @@ export default async function JoueursPage() {
   return (
     <DashboardShell
       title="Joueurs"
-      subtitle="Effectif du SAFFLE FC Académie — Sinfra"
+      subtitle={`Effectif — ${CLUB.name}`}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
       actions={

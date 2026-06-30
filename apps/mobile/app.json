@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "SAFFLE FC Académie",
-    "slug": "saffle-fc-academie",
+    "name": "SAFFLE FF Académie CI",
+    "slug": "saffle-ff-academie-ci",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

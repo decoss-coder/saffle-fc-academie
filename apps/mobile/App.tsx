@@ -1,9 +1,8 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 const CLUB = {
-  shortName: "SAFFLE FF",
-  name: "Académie CI",
+  name: "SAFFLE FF Académie CI",
   tagline: "Centre de formation de football",
   location: "Sinfra, Côte d'Ivoire",
 };
@@ -11,7 +10,11 @@ const CLUB = {
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text style={styles.badge}>{CLUB.shortName}</Text>
+      <Image
+        source={require("./assets/logo.jpg")}
+        style={styles.logo}
+        resizeMode="contain"
+      />
       <Text style={styles.title}>{CLUB.name}</Text>
       <Text style={styles.location}>{CLUB.location}</Text>
       <Text style={styles.subtitle}>{CLUB.tagline}</Text>
@@ -28,19 +31,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
-  badge: {
-    color: "#34d399",
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 3,
-    marginBottom: 8,
-    textTransform: "uppercase",
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
+    borderRadius: 60,
   },
   title: {
     color: "#fafafa",
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: "700",
-    marginBottom: 4,
+    marginBottom: 6,
+    textAlign: "center",
   },
   location: {
     color: "#71717a",

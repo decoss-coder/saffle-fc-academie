@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { signOut } from "@/app/auth/actions";
 import { CLUB } from "@/lib/club";
 
@@ -26,22 +27,29 @@ export function DashboardShell({
 }: DashboardShellProps) {
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-b border-zinc-800 bg-zinc-950/80">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-400">
-              {CLUB.name} · {CLUB.city}
-            </p>
-            <p className="text-sm text-zinc-400">
-              {userName} · {userRole}
-            </p>
-          </div>
+      <header className="border-b border-emerald-900/30 bg-zinc-950/95">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <Image
+              src={CLUB.assets.logo}
+              alt={CLUB.name}
+              width={44}
+              height={44}
+              className="rounded-full ring-2 ring-emerald-500/20"
+            />
+            <div>
+              <p className="text-sm font-semibold leading-tight">{CLUB.name}</p>
+              <p className="text-xs text-zinc-400">
+                {userName} · {userRole}
+              </p>
+            </div>
+          </Link>
           <div className="flex flex-wrap items-center gap-2">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-full border border-zinc-800 px-4 py-2 text-sm transition hover:border-zinc-600"
+                className="rounded-full border border-zinc-800 px-4 py-2 text-sm transition hover:border-emerald-700"
               >
                 {item.label}
               </Link>
