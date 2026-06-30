@@ -14,19 +14,19 @@ export default function ActiverPage() {
     >
       {!configured ? (
         <div className="space-y-4">
-          <p className="text-sm text-green-700">
+          <p className="text-sm leading-6 text-[#3f4b43]">
             Configuration Supabase en cours. Réessayez dans quelques minutes.
           </p>
           <Link
             href="/"
-            className="inline-flex rounded-full border border-green-300 px-5 py-2 text-sm text-green-800 transition hover:bg-green-50"
+            className="inline-flex rounded-full border border-[#d8b451]/40 px-5 py-2 text-sm font-semibold text-[#06110b] transition hover:bg-[#f2ead5]"
           >
             Retour à l&apos;accueil
           </Link>
         </div>
       ) : (
         <>
-          <p className="mb-4 text-sm text-green-700">
+          <p className="mb-5 rounded-lg border border-[#d8b451]/25 bg-[#fffaf0] px-4 py-3 text-sm leading-6 text-[#3f4b43]">
             Parents : utilisez le numéro indiqué sur la fiche de votre enfant.
             Staff : utilisez le numéro enregistré par l&apos;administration.
           </p>

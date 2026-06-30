@@ -19,12 +19,12 @@ export default async function LoginPage({
     >
       {!configured ? (
         <div className="space-y-4">
-          <p className="text-sm text-green-700">
+          <p className="text-sm leading-6 text-[#3f4b43]">
             Configuration Supabase en cours. Réessayez dans quelques minutes.
           </p>
           <Link
             href="/"
-            className="inline-flex rounded-full border border-green-300 px-5 py-2 text-sm text-green-800 transition hover:bg-green-50"
+            className="inline-flex rounded-full border border-[#d8b451]/40 px-5 py-2 text-sm font-semibold text-[#06110b] transition hover:bg-[#f2ead5]"
           >
             Retour à l&apos;accueil
           </Link>
@@ -32,7 +32,7 @@ export default async function LoginPage({
       ) : (
         <>
           {params.error === "auth_callback_failed" && (
-            <p className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
               La confirmation du lien a échoué. Réessayez.
             </p>
           )}
