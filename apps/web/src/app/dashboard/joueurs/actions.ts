@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth";
 import type { PlayerCategory } from "@/lib/players/constants";
 import { PLAYER_GROUPS as GROUPS } from "@/lib/players/constants";
+import { DEFAULT_COUNTRY } from "@/lib/players/countries";
 
 export type PlayerFormState = {
   error?: string;
@@ -25,13 +26,19 @@ async function generateMatricule(supabase: Awaited<ReturnType<typeof createClien
   return `${prefix}${next}`;
 }
 
-export async function createPlayer(
-  _prevState: PlayerFormState,
-  formData: FormData,
-): Promise<PlayerFormState> {
-  await requireStaff();
-  const supabase = await createClient();
+function optionalText(value: FormDataEntryValue | null) {
+  const trimmed = String(value ?? "").trim();
+  return trimmed || null;
+}
 
+function optionalNumber(value: FormDataEntryValue | null) {
+  const trimmed = String(value ?? "").trim();
+  if (!trimmed) return null;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : null;
+}
+
+function parsePlayerPayload(formData: FormData) {
   const firstName = String(formData.get("first_name") ?? "").trim();
   const lastName = String(formData.get("last_name") ?? "").trim();
   const birthDate = String(formData.get("birth_date") ?? "");
@@ -44,32 +51,56 @@ export async function createPlayer(
   }
 
   if (!firstName || !lastName || !birthDate || !gender || !category || !teamGroup) {
-    return { error: "Remplissez tous les champs obligatoires." };
+    return { error: "Remplissez tous les champs obligatoires." as const };
+  }
+
+  return {
+    payload: {
+      first_name: firstName,
+      last_name: lastName,
+      birth_name: optionalText(formData.get("birth_name")),
+      birth_date: birthDate,
+      gender,
+      category,
+      team: teamGroup,
+      nationality: optionalText(formData.get("nationality")) ?? DEFAULT_COUNTRY,
+      secondary_nationality: optionalText(formData.get("secondary_nationality")),
+      birth_country: optionalText(formData.get("birth_country")) ?? DEFAULT_COUNTRY,
+      birth_region: optionalText(formData.get("birth_region")),
+      birth_city: optionalText(formData.get("birth_city")),
+      father_name: optionalText(formData.get("father_name")),
+      mother_name: optionalText(formData.get("mother_name")),
+      guardian_name: optionalText(formData.get("guardian_name")),
+      address: optionalText(formData.get("address")),
+      phone: optionalText(formData.get("phone")),
+      height_cm: optionalNumber(formData.get("height_cm")),
+      weight_kg: optionalNumber(formData.get("weight_kg")),
+      strong_foot: optionalText(formData.get("strong_foot")),
+      primary_position: optionalText(formData.get("primary_position")),
+      secondary_position: optionalText(formData.get("secondary_position")),
+      birth_certificate_ref: optionalText(formData.get("birth_certificate_ref")),
+      former_license_number: optionalText(formData.get("former_license_number")),
+    },
+  };
+}
+
+export async function createPlayer(
+  _prevState: PlayerFormState,
+  formData: FormData,
+): Promise<PlayerFormState> {
+  await requireStaff();
+  const supabase = await createClient();
+
+  const parsed = parsePlayerPayload(formData);
+  if ("error" in parsed) {
+    return { error: parsed.error };
   }
 
   const matricule = await generateMatricule(supabase);
 
   const { data, error } = await supabase
     .from("players")
-    .insert({
-      matricule,
-      first_name: firstName,
-      last_name: lastName,
-      birth_date: birthDate,
-      gender,
-      category,
-      team: teamGroup,
-      father_name: String(formData.get("father_name") ?? "").trim() || null,
-      mother_name: String(formData.get("mother_name") ?? "").trim() || null,
-      guardian_name: String(formData.get("guardian_name") ?? "").trim() || null,
-      address: String(formData.get("address") ?? "").trim() || null,
-      phone: String(formData.get("phone") ?? "").trim() || null,
-      strong_foot: String(formData.get("strong_foot") ?? "").trim() || null,
-      primary_position:
-        String(formData.get("primary_position") ?? "").trim() || null,
-      secondary_position:
-        String(formData.get("secondary_position") ?? "").trim() || null,
-    })
+    .insert({ matricule, ...parsed.payload })
     .select("id")
     .single();
 
@@ -79,6 +110,38 @@ export async function createPlayer(
 
   revalidatePath("/dashboard/joueurs");
   redirect(`/dashboard/joueurs/${data.id}`);
+}
+
+export async function updatePlayer(
+  _prevState: PlayerFormState,
+  formData: FormData,
+): Promise<PlayerFormState> {
+  const playerId = String(formData.get("player_id") ?? "").trim();
+  if (!playerId) {
+    return { error: "Joueur introuvable." };
+  }
+
+  await requireStaff();
+  const supabase = await createClient();
+
+  const parsed = parsePlayerPayload(formData);
+  if ("error" in parsed) {
+    return { error: parsed.error };
+  }
+
+  const { error } = await supabase
+    .from("players")
+    .update(parsed.payload)
+    .eq("id", playerId);
+
+  if (error) {
+    return { error: "Impossible de mettre à jour le joueur. Vérifiez Supabase." };
+  }
+
+  revalidatePath("/dashboard/joueurs");
+  revalidatePath(`/dashboard/joueurs/${playerId}`);
+  revalidatePath(`/dashboard/joueurs/${playerId}/modifier`);
+  redirect(`/dashboard/joueurs/${playerId}`);
 }
 
 export async function archivePlayer(formData: FormData): Promise<void> {
