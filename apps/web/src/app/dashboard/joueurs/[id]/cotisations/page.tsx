@@ -4,6 +4,9 @@ import { DashboardShell, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { EmptyState } from "@/components/empty-state";
+import { PaymentForm } from "@/components/payment-form";
+import { DueStatusBadge } from "@/components/due-status-badge";
+import { StatusBadge } from "@/components/status-badge";
 import {
   DataTable,
   DataTableBody,
@@ -13,11 +16,17 @@ import {
 } from "@/components/data-table";
 import { matriculeClass, navActionClass, rowCompact } from "@/lib/dashboard-ui";
 import {
-  DUE_STATUS_LABELS,
   formatFcfa,
   PAYMENT_METHOD_LABELS,
   PAYMENT_STATUS_LABELS,
+  paymentStatusVariant,
 } from "@/lib/payments/constants";
+import {
+  initiateStaffWavePayment,
+  recordManualPayment,
+} from "@/app/dashboard/paiements/actions";
+import { ReceiptLink } from "@/app/dashboard/paiements/payment-history-client";
+import { canManageFinance } from "@/lib/permissions";
 
 export default async function JoueurCotisationsPage({
   params,
@@ -26,6 +35,7 @@ export default async function JoueurCotisationsPage({
 }) {
   const { id } = await params;
   const { user, profile } = await requireUser();
+  const canManage = canManageFinance(profile.role);
   const supabase = await createClient();
 
   const { data: player } = await supabase
@@ -49,10 +59,14 @@ export default async function JoueurCotisationsPage({
   const { data: payments } = await supabase
     .from("payments")
     .select(
-      "id, amount, status, payment_method, created_at, paid_at, receipt_number",
+      "id, amount, status, payment_method, created_at, paid_at, receipt_number, payer_name",
     )
     .eq("player_id", id)
     .order("created_at", { ascending: false });
+
+  const openDues = (dues ?? []).filter((d) =>
+    ["pending", "partial", "overdue"].includes(d.status),
+  );
 
   return (
     <DashboardShell
@@ -83,11 +97,55 @@ export default async function JoueurCotisationsPage({
         />
         <div>
           <p className="font-semibold text-green-900">{playerName}</p>
-          <p className={matriculeClass}>{player.matricule}
+          <p className={matriculeClass}>
+            {player.matricule}
             {player.team ? ` · ${player.team}` : ""}
           </p>
         </div>
       </div>
+
+      {canManage && openDues.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium text-green-900">Encaisser</h2>
+          {openDues.map((due) => {
+            const remaining = Number(due.remaining_amount);
+            return (
+              <article
+                key={due.id}
+                className="rounded-2xl border border-green-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-medium text-green-900">{due.label}</p>
+                    <p className="text-sm text-green-700">
+                      Reste : {formatFcfa(remaining)} ·{" "}
+                      <DueStatusBadge status={due.status} />
+                    </p>
+                  </div>
+                  {remaining >= 100 && (
+                    <form action={initiateStaffWavePayment}>
+                      <input type="hidden" name="due_id" value={due.id} />
+                      <input type="hidden" name="player_id" value={player.id} />
+                      <input type="hidden" name="amount" value={remaining} />
+                      <button
+                        type="submit"
+                        className="rounded-full bg-green-800 px-4 py-2 text-sm text-white hover:bg-green-700"
+                      >
+                        Wave {formatFcfa(remaining)}
+                      </button>
+                    </form>
+                  )}
+                </div>
+                <PaymentForm
+                  action={recordManualPayment}
+                  dueId={due.id}
+                  remaining={remaining}
+                />
+              </article>
+            );
+          })}
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-lg font-medium text-green-900">Historique des cotisations</h2>
@@ -117,7 +175,7 @@ export default async function JoueurCotisationsPage({
                   <td className={rowCompact}>{formatFcfa(Number(due.amount_paid))}</td>
                   <td className={rowCompact}>{formatFcfa(Number(due.remaining_amount))}</td>
                   <td className={rowCompact}>
-                    {DUE_STATUS_LABELS[due.status] ?? due.status}
+                    <DueStatusBadge status={due.status} />
                   </td>
                   <td className={`${rowCompact} text-slate-600`}>
                     {due.due_date
@@ -146,6 +204,7 @@ export default async function JoueurCotisationsPage({
                 <DataTableTh>Date</DataTableTh>
                 <DataTableTh>Montant</DataTableTh>
                 <DataTableTh>Méthode</DataTableTh>
+                <DataTableTh>Payeur</DataTableTh>
                 <DataTableTh>Statut</DataTableTh>
                 <DataTableTh>Reçu</DataTableTh>
               </tr>
@@ -164,11 +223,18 @@ export default async function JoueurCotisationsPage({
                   <td className={rowCompact}>
                     {PAYMENT_METHOD_LABELS[payment.payment_method] ?? payment.payment_method}
                   </td>
+                  <td className={rowCompact}>{payment.payer_name ?? "—"}</td>
                   <td className={rowCompact}>
-                    {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+                    <StatusBadge
+                      label={PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+                      variant={paymentStatusVariant(payment.status)}
+                    />
                   </td>
-                  <td className={`${rowCompact} ${matriculeClass}`}>
-                    {payment.receipt_number ?? "—"}
+                  <td className={rowCompact}>
+                    <ReceiptLink
+                      paymentId={payment.id}
+                      receiptNumber={payment.receipt_number}
+                    />
                   </td>
                 </tr>
               ))}

@@ -26,7 +26,7 @@ Le bureau souhaite un **budget prévisionnel** voté et arrêté **avant le déb
 
 ### 2. Comité directeur
 
-- Membres issus de `phone_registry` (rôles : président, bureau, trésorier, coach, communication, logistique, admin)
+- Membres issus de `phone_registry` (rôles : président, bureau, trésorier, communication, logistique, admin — **hors coachs**)
 - `committee_dues` + `committee_due_payments` — cotisations et encaissements
 - Option « lier au budget actif » : crée une `budget_receipt` type `cotisation_comite` (toujours manuelle, pas de sync auto Wave)
 

@@ -1,27 +1,36 @@
+import Link from "next/link";
 import { Suspense } from "react";
-import { DashboardShell, requireTreasurer } from "@/lib/auth";
+import { DashboardShell } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PLAYER_GROUPS } from "@/lib/players/constants";
 import {
-  DUE_STATUS_LABELS,
   formatFcfa,
   PAYMENT_METHOD_LABELS,
+  PAYMENT_STATUS_LABELS,
+  paymentStatusVariant,
 } from "@/lib/payments/constants";
-import { confirmPayment, createGroupDue } from "./actions";
+import { confirmPayment, createGroupDue, createIndividualDue } from "./actions";
 import { CreateGroupDueForm } from "./create-group-due-form";
+import { CreateIndividualDueForm } from "./create-individual-due-form";
 import { GroupTabs } from "@/components/group-tabs";
 import { EmptyState } from "@/components/empty-state";
 import { InfoBanner } from "@/components/info-banner";
+import { FinanceReadOnlyBanner } from "@/components/finance-read-only-banner";
+import { DueStatusBadge } from "@/components/due-status-badge";
+import { StatusBadge } from "@/components/status-badge";
+import { LiveSearch } from "@/components/live-search";
 import {
   DataTable,
   DataTableBody,
   DataTableHead,
   DataTableTh,
   ListCount,
+  SortableTh,
 } from "@/components/data-table";
 import { ClickableTableRow, PlayerCellLink } from "@/components/clickable-table-row";
-import { matriculeClass, rowCompact } from "@/lib/dashboard-ui";
+import { matriculeClass, rowCompact, type SortDir } from "@/lib/dashboard-ui";
 import { unwrapRelation } from "@/lib/supabase/relation";
+import { requireFinanceSession } from "@/lib/permissions";
 import { PaiementsTabs } from "./paiements-tabs";
 
 const DEFAULT_GROUP = PLAYER_GROUPS[0].team;
@@ -31,22 +40,78 @@ function resolveGroup(groupe?: string) {
   return match?.team ?? DEFAULT_GROUP;
 }
 
+type DueRow = {
+  id: string;
+  player_id: string;
+  label: string;
+  amount_due: number;
+  remaining_amount: number;
+  status: string;
+  due_date: string | null;
+  playerName: string;
+  matricule: string;
+  team: string;
+};
+
+function sortDues(
+  rows: DueRow[],
+  sort: string,
+  dir: SortDir,
+): DueRow[] {
+  const mult = dir === "desc" ? -1 : 1;
+  return [...rows].sort((a, b) => {
+    switch (sort) {
+      case "label":
+        return mult * a.label.localeCompare(b.label, "fr");
+      case "amount":
+        return mult * (a.amount_due - b.amount_due);
+      case "remaining":
+        return mult * (a.remaining_amount - b.remaining_amount);
+      case "due_date": {
+        const da = a.due_date ? new Date(a.due_date).getTime() : 0;
+        const db = b.due_date ? new Date(b.due_date).getTime() : 0;
+        return mult * (da - db);
+      }
+      case "status":
+        return mult * a.status.localeCompare(b.status, "fr");
+      default:
+        return mult * a.playerName.localeCompare(b.playerName, "fr");
+    }
+  });
+}
+
 export default async function PaiementsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ wave?: string; groupe?: string; tab?: string }>;
+  searchParams: Promise<{
+    wave?: string;
+    groupe?: string;
+    tab?: string;
+    q?: string;
+    sort?: string;
+    dir?: string;
+  }>;
 }) {
   const params = await searchParams;
-  const activeTab = params.tab === "creer" ? "creer" : "suivi";
+  const { profile, canManage } = await requireFinanceSession();
+  const activeTab =
+    params.tab === "creer" && canManage
+      ? "creer"
+      : params.tab === "historique"
+        ? "historique"
+        : "suivi";
   const activeTeam = resolveGroup(params.groupe);
+  const sort = params.sort ?? "player";
+  const dir: SortDir = params.dir === "desc" ? "desc" : "asc";
+  const query = params.q?.trim().toLowerCase() ?? "";
 
-  const { profile } = await requireTreasurer();
   const supabase = await createClient();
 
   const { data: players } = await supabase
     .from("players")
-    .select("id, team")
-    .eq("is_archived", false);
+    .select("id, team, first_name, last_name, matricule")
+    .eq("is_archived", false)
+    .order("last_name");
 
   const groupCounts = Object.fromEntries(
     PLAYER_GROUPS.map((g) => [
@@ -54,6 +119,11 @@ export default async function PaiementsPage({
       (players ?? []).filter((p) => p.team === g.team).length,
     ]),
   );
+
+  const playerOptions = (players ?? []).map((p) => ({
+    id: p.id,
+    label: `${p.last_name} ${p.first_name} · ${p.matricule} · ${p.team ?? ""}`,
+  }));
 
   const { data: pendingPayments } = await supabase
     .from("payments")
@@ -88,12 +158,44 @@ export default async function PaiementsPage({
     }
   }
 
-  const filteredDues = (allOpenDues ?? []).filter((due) => {
-    const player = unwrapRelation(due.players);
-    return player?.team === activeTeam;
-  });
+  const dueRows: DueRow[] = (allOpenDues ?? [])
+    .map((due) => {
+      const player = unwrapRelation(due.players);
+      if (player?.team !== activeTeam) return null;
+      const playerName = player
+        ? `${player.last_name} ${player.first_name}`
+        : "Joueur inconnu";
+      if (
+        query &&
+        !playerName.toLowerCase().includes(query) &&
+        !due.label.toLowerCase().includes(query) &&
+        !(player?.matricule ?? "").toLowerCase().includes(query)
+      ) {
+        return null;
+      }
+      return {
+        id: due.id,
+        player_id: due.player_id,
+        label: due.label,
+        amount_due: Number(due.amount_due),
+        remaining_amount: Number(due.remaining_amount),
+        status: due.status,
+        due_date: due.due_date,
+        playerName,
+        matricule: player?.matricule ?? "",
+        team: player?.team ?? "",
+      };
+    })
+    .filter((r): r is DueRow => r !== null);
 
+  const filteredDues = sortDues(dueRows, sort, dir);
   const activeGroup = PLAYER_GROUPS.find((g) => g.team === activeTeam);
+  const basePath = "/dashboard/paiements";
+  const listParams = {
+    tab: "suivi",
+    groupe: activeTeam,
+    q: params.q,
+  };
 
   const tabItems = PLAYER_GROUPS.map((g) => ({
     key: g.team,
@@ -113,26 +215,28 @@ export default async function PaiementsPage({
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
     >
+      {!canManage && <FinanceReadOnlyBanner />}
+
       <InfoBanner>
-        Suivez les cotisations ouvertes et confirmez les paiements Wave. Créez de
-        nouvelles cotisations depuis l&apos;onglet Créer.
+        Suivez les cotisations ouvertes et confirmez les paiements Wave.
+        {canManage && " Créez de nouvelles cotisations depuis l'onglet Créer."}
       </InfoBanner>
 
-      {params.wave === "success" && (
+      {params.wave === "success" && canManage && (
         <InfoBanner title="Paiement Wave initié">
           Confirmez l&apos;encaissement dans l&apos;onglet Suivi une fois reçu.
         </InfoBanner>
       )}
 
       <Suspense fallback={<div className="h-10" />}>
-        <PaiementsTabs activeTab={activeTab} />
+        <PaiementsTabs activeTab={activeTab} canManage={canManage} />
       </Suspense>
 
-      {activeTab === "creer" ? (
-        <CreateGroupDueForm
-          groupCounts={groupCounts}
-          action={createGroupDue}
-        />
+      {activeTab === "creer" && canManage ? (
+        <div className="space-y-6">
+          <CreateGroupDueForm groupCounts={groupCounts} action={createGroupDue} />
+          <CreateIndividualDueForm players={playerOptions} action={createIndividualDue} />
+        </div>
       ) : (
         <>
           <section className="space-y-4">
@@ -151,7 +255,7 @@ export default async function PaiementsPage({
                       key={payment.id}
                       className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4"
                     >
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-medium text-green-900">
                           {formatFcfa(Number(payment.amount))} ·{" "}
                           {player
@@ -163,16 +267,32 @@ export default async function PaiementsPage({
                           {due?.label ?? "Cotisation"} ·{" "}
                           {PAYMENT_METHOD_LABELS[payment.payment_method]}
                         </p>
+                        <StatusBadge
+                          label={PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+                          variant={paymentStatusVariant(payment.status)}
+                        />
+                        {payment.wave_checkout_url && (
+                          <a
+                            href={payment.wave_checkout_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-sm text-green-800 underline"
+                          >
+                            Ouvrir le lien Wave
+                          </a>
+                        )}
                       </div>
-                      <form action={confirmPayment}>
-                        <input type="hidden" name="payment_id" value={payment.id} />
-                        <button
-                          type="submit"
-                          className="rounded-full bg-green-800 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
-                        >
-                          Confirmer l&apos;encaissement
-                        </button>
-                      </form>
+                      {canManage && (
+                        <form action={confirmPayment}>
+                          <input type="hidden" name="payment_id" value={payment.id} />
+                          <button
+                            type="submit"
+                            className="rounded-full bg-green-800 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
+                          >
+                            Confirmer l&apos;encaissement
+                          </button>
+                        </form>
+                      )}
                     </article>
                   );
                 })}
@@ -198,8 +318,19 @@ export default async function PaiementsPage({
               />
             </div>
 
+            <LiveSearch placeholder="Rechercher joueur ou libellé…" preserveParams={["groupe", "tab"]} />
+
             {!filteredDues.length ? (
-              <EmptyState message={`Aucune cotisation ouverte pour ${activeTeam}.`} />
+              <EmptyState message={`Aucune cotisation ouverte pour ${activeTeam}.`}>
+                {canManage && (
+                  <Link
+                    href={`/dashboard/paiements?tab=creer&groupe=${encodeURIComponent(activeTeam)}`}
+                    className="inline-block rounded-full bg-green-800 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
+                  >
+                    Créer une cotisation →
+                  </Link>
+                )}
+              </EmptyState>
             ) : (
               <DataTable
                 count={
@@ -212,41 +343,74 @@ export default async function PaiementsPage({
               >
                 <DataTableHead>
                   <tr>
-                    <DataTableTh>Joueur</DataTableTh>
-                    <DataTableTh>Libellé</DataTableTh>
-                    <DataTableTh>Montant</DataTableTh>
-                    <DataTableTh>Reste</DataTableTh>
-                    <DataTableTh>Échéance</DataTableTh>
-                    <DataTableTh>Statut</DataTableTh>
+                    <SortableTh
+                      label="Joueur"
+                      sortKey="player"
+                      currentSort={sort}
+                      currentDir={dir}
+                      basePath={basePath}
+                      params={listParams}
+                    />
+                    <SortableTh
+                      label="Libellé"
+                      sortKey="label"
+                      currentSort={sort}
+                      currentDir={dir}
+                      basePath={basePath}
+                      params={listParams}
+                    />
+                    <SortableTh
+                      label="Montant"
+                      sortKey="amount"
+                      currentSort={sort}
+                      currentDir={dir}
+                      basePath={basePath}
+                      params={listParams}
+                    />
+                    <SortableTh
+                      label="Reste"
+                      sortKey="remaining"
+                      currentSort={sort}
+                      currentDir={dir}
+                      basePath={basePath}
+                      params={listParams}
+                    />
+                    <SortableTh
+                      label="Échéance"
+                      sortKey="due_date"
+                      currentSort={sort}
+                      currentDir={dir}
+                      basePath={basePath}
+                      params={listParams}
+                    />
+                    <SortableTh
+                      label="Statut"
+                      sortKey="status"
+                      currentSort={sort}
+                      currentDir={dir}
+                      basePath={basePath}
+                      params={listParams}
+                    />
                     <DataTableTh className="w-10" />
                   </tr>
                 </DataTableHead>
                 <DataTableBody>
                   {filteredDues.map((due) => {
-                    const player = unwrapRelation(due.players);
-                    const playerHref = player
-                      ? `/dashboard/joueurs/${due.player_id}/cotisations`
-                      : "#";
+                    const playerHref = `/dashboard/joueurs/${due.player_id}/cotisations`;
                     return (
                       <ClickableTableRow key={due.id} href={playerHref}>
                         <PlayerCellLink href={playerHref}>
                           <div>
-                            <p className="font-medium text-green-900">
-                              {player
-                                ? `${player.last_name} ${player.first_name}`
-                                : "Joueur inconnu"}
-                            </p>
-                            {player?.matricule && (
-                              <p className={matriculeClass}>{player.matricule}</p>
+                            <p className="font-medium text-green-900">{due.playerName}</p>
+                            {due.matricule && (
+                              <p className={matriculeClass}>{due.matricule}</p>
                             )}
                           </div>
                         </PlayerCellLink>
                         <td className={rowCompact}>{due.label}</td>
-                        <td className={rowCompact}>
-                          {formatFcfa(Number(due.amount_due))}
-                        </td>
+                        <td className={rowCompact}>{formatFcfa(due.amount_due)}</td>
                         <td className={`${rowCompact} font-medium`}>
-                          {formatFcfa(Number(due.remaining_amount))}
+                          {formatFcfa(due.remaining_amount)}
                         </td>
                         <td className={`${rowCompact} text-slate-600`}>
                           {due.due_date
@@ -256,7 +420,7 @@ export default async function PaiementsPage({
                             : "—"}
                         </td>
                         <td className={rowCompact}>
-                          {DUE_STATUS_LABELS[due.status] ?? due.status}
+                          <DueStatusBadge status={due.status} />
                         </td>
                       </ClickableTableRow>
                     );

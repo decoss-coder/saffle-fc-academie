@@ -8,7 +8,8 @@ import {
   type ComiteFormState,
 } from "./actions";
 import { ClubCard, ClubFormMessages, inputClass } from "@/components/club-ui";
-import { DUE_STATUS_LABELS, formatFcfa, PAYMENT_METHOD_LABELS } from "@/lib/payments/constants";
+import { formatFcfa, PAYMENT_METHOD_LABELS } from "@/lib/payments/constants";
+import { DueStatusBadge } from "@/components/due-status-badge";
 
 const initial: ComiteFormState = {};
 
@@ -24,7 +25,7 @@ export function BulkDueForm() {
         <input name="due_date" type="date" className={inputClass} />
         <div className="sm:col-span-2">
           <ClubFormMessages error={state.error} success={state.success} />
-          <button type="submit" disabled={pending} className="rounded-full bg-green-800 px-5 py-2 text-sm text-white">
+          <button type="submit" disabled={pending} className="rounded-full bg-green-800 px-5 py-2 text-sm text-white disabled:opacity-60">
             Créer pour tous les membres
           </button>
         </div>
@@ -54,7 +55,7 @@ export function SingleDueForm({
         <input name="amount_due" type="number" min={100} required placeholder="Montant FCFA" className={inputClass} />
         <input name="due_date" type="date" className={inputClass} />
         <ClubFormMessages error={state.error} success={state.success} />
-        <button type="submit" disabled={pending} className="rounded-full bg-green-800 px-5 py-2 text-sm text-white">
+        <button type="submit" disabled={pending} className="rounded-full bg-green-800 px-5 py-2 text-sm text-white disabled:opacity-60">
           Créer
         </button>
       </form>
@@ -62,7 +63,13 @@ export function SingleDueForm({
   );
 }
 
-export function PaymentForm({ dueId, label, remaining }: { dueId: string; label: string; remaining: number }) {
+export function CommitteePaymentForm({
+  dueId,
+  remaining,
+}: {
+  dueId: string;
+  remaining: number;
+}) {
   const [state, action, pending] = useActionState(recordCommitteePayment, initial);
 
   return (
@@ -78,17 +85,12 @@ export function PaymentForm({ dueId, label, remaining }: { dueId: string; label:
         <input type="checkbox" name="link_budget" defaultChecked />
         Lier au budget actif
       </label>
-      <button type="submit" disabled={pending} className="rounded-full bg-green-800 px-3 py-1 text-xs text-white">
+      <button type="submit" disabled={pending} className="rounded-full bg-green-800 px-3 py-1 text-xs text-white disabled:opacity-60">
         Encaisser
       </button>
-      {state.success && <span className="text-xs text-green-700">{state.success}</span>}
-      {state.error && <span className="text-xs text-red-600">{state.error}</span>}
+      <ClubFormMessages error={state.error} success={state.success} />
     </form>
   );
 }
 
-export function DueStatus({ status }: { status: string }) {
-  return <span>{DUE_STATUS_LABELS[status] ?? status}</span>;
-}
-
-export { formatFcfa };
+export { formatFcfa, DueStatusBadge };

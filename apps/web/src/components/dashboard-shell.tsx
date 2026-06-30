@@ -9,12 +9,17 @@ import {
   canManageBudget,
   canManageClub,
   canManageConvocations,
-  canManagePayments,
   canManagePhones,
   canManagePlayers,
   canUploadDocuments,
   isParentRole,
+  isPlayerAccountRole,
 } from "@/lib/auth";
+import {
+  canViewFinance,
+  canViewSalaries,
+  isCommitteeRegistryRole,
+} from "@/lib/permissions";
 
 type DashboardShellProps = {
   title: string;
@@ -64,6 +69,14 @@ function buildNavItems(userRole: string) {
     );
   }
 
+  if (isPlayerAccountRole(userRole)) {
+    items.push({
+      href: "/dashboard/player/paiements",
+      label: "Mes paiements",
+      group: "Famille",
+    });
+  }
+
   if (canManagePlayers(userRole)) {
     items.push(
       {
@@ -95,7 +108,7 @@ function buildNavItems(userRole: string) {
     });
   }
 
-  if (canManagePayments(userRole)) {
+  if (canViewFinance(userRole)) {
     items.push({
       href: "/dashboard/paiements",
       label: "Paiements",
@@ -104,6 +117,22 @@ function buildNavItems(userRole: string) {
     items.push({
       href: "/dashboard/comite",
       label: "Comité directeur",
+      group: "Finance",
+    });
+  }
+
+  if (canViewSalaries(userRole)) {
+    items.push({
+      href: "/dashboard/salaires",
+      label: "Salaires",
+      group: "Finance",
+    });
+  }
+
+  if (isCommitteeRegistryRole(userRole)) {
+    items.push({
+      href: "/dashboard/comite/mes-cotisations",
+      label: "Mes cotisations comité",
       group: "Finance",
     });
   }

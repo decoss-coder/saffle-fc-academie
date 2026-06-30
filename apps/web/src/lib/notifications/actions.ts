@@ -24,6 +24,23 @@ export async function notifyPlayerStakeholders(params: NotifyParams) {
   });
 }
 
+export async function notifyUser(params: {
+  userId: string;
+  type: "absence" | "late" | "performance" | "payment_overdue" | "general";
+  title: string;
+  body: string;
+  link?: string;
+}) {
+  const supabase = await createClient();
+  await supabase.from("notifications").insert({
+    user_id: params.userId,
+    type: params.type,
+    title: params.title,
+    body: params.body,
+    link: params.link ?? null,
+  });
+}
+
 export async function markNotificationRead(notificationId: string) {
   const supabase = await createClient();
 

@@ -3,17 +3,16 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
-type PaiementsTabsProps = {
-  activeTab: "suivi" | "creer" | "historique";
+type ComiteTabsProps = {
+  activeTab: "suivi" | "creer";
   canManage?: boolean;
 };
 
-export function PaiementsTabs({ activeTab, canManage = true }: PaiementsTabsProps) {
+export function ComiteTabs({ activeTab, canManage = true }: ComiteTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const buildHref = (tab: string) => {
-    if (tab === "historique") return "/dashboard/paiements/historique";
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     return `${pathname}?${params.toString()}`;
@@ -27,7 +26,7 @@ export function PaiementsTabs({ activeTab, canManage = true }: PaiementsTabsProp
     }`;
 
   return (
-    <nav className="flex flex-wrap gap-2" aria-label="Paiements">
+    <nav className="flex flex-wrap gap-2" aria-label="Comité directeur">
       <Link href={buildHref("suivi")} className={tabClass("suivi")}>
         Suivi
       </Link>
@@ -36,9 +35,6 @@ export function PaiementsTabs({ activeTab, canManage = true }: PaiementsTabsProp
           Créer
         </Link>
       )}
-      <Link href={buildHref("historique")} className={tabClass("historique")}>
-        Historique
-      </Link>
     </nav>
   );
 }

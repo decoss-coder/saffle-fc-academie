@@ -3,23 +3,31 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import {
-  canManagePayments,
-  requireTreasurer,
-  requireUser,
-} from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
+import { requireFinanceManager } from "@/lib/permissions";
 import { createWaveCheckout, getAppBaseUrl } from "@/lib/wave/client";
 import { MIN_PAYMENT_FCFA } from "@/lib/payments/constants";
 import { PLAYER_GROUPS } from "@/lib/players/constants";
+import { notifyPlayerStakeholders, notifyUser } from "@/lib/notifications/actions";
 
 export type PaymentFormState = { error?: string; success?: string };
+
+function revalidatePaymentPaths(playerId?: string) {
+  revalidatePath("/dashboard/paiements");
+  revalidatePath("/dashboard/paiements/historique");
+  revalidatePath("/dashboard/parent/paiements");
+  revalidatePath("/dashboard/player/paiements");
+  if (playerId) {
+    revalidatePath(`/dashboard/joueurs/${playerId}/cotisations`);
+  }
+  revalidatePath("/dashboard/joueurs");
+}
 
 export async function createGroupDue(
   _prev: PaymentFormState,
   formData: FormData,
 ): Promise<PaymentFormState> {
-  const { user } = await requireUser();
-  await requireTreasurer();
+  const { user } = await requireFinanceManager();
   const supabase = await createClient();
 
   const teamGroup = String(formData.get("team_group") ?? "").trim();
@@ -66,22 +74,69 @@ export async function createGroupDue(
     return { error: "Impossible de créer les cotisations." };
   }
 
-  revalidatePath("/dashboard/paiements");
-  revalidatePath("/dashboard/parent/paiements");
-  revalidatePath("/dashboard/joueurs");
+  revalidatePaymentPaths();
   return {
     success: `${players.length} cotisation(s) créée(s) pour ${teamGroup} — « ${label} ».`,
   };
 }
 
+export async function createIndividualDue(
+  _prev: PaymentFormState,
+  formData: FormData,
+): Promise<PaymentFormState> {
+  const { user } = await requireFinanceManager();
+  const supabase = await createClient();
+
+  const playerId = String(formData.get("player_id") ?? "").trim();
+  const label = String(formData.get("label") ?? "").trim();
+  const amount = Number(formData.get("amount_due") ?? 0);
+  const dueDate = String(formData.get("due_date") ?? "") || null;
+
+  if (!playerId || !label || amount < MIN_PAYMENT_FCFA) {
+    return { error: "Joueur, libellé et montant requis (min. 100 FCFA)." };
+  }
+
+  const { data: player } = await supabase
+    .from("players")
+    .select("id")
+    .eq("id", playerId)
+    .eq("is_archived", false)
+    .maybeSingle();
+
+  if (!player) return { error: "Joueur introuvable." };
+
+  const { data: season } = await supabase
+    .from("seasons")
+    .select("id")
+    .eq("is_active", true)
+    .maybeSingle();
+
+  const { error } = await supabase.from("player_dues").insert({
+    player_id: playerId,
+    season_id: season?.id ?? null,
+    due_type: "cotisation",
+    label,
+    amount_due: amount,
+    due_date: dueDate,
+    created_by: user.id,
+  });
+
+  if (error) return { error: "Impossible de créer la cotisation." };
+
+  revalidatePaymentPaths(playerId);
+  return { success: `Cotisation « ${label} » créée.` };
+}
+
 export async function initiateWavePayment(formData: FormData) {
-  const { user } = await requireUser();
+  await requireUser();
   const supabase = await createClient();
   const dueId = String(formData.get("due_id") ?? "");
   const amount = Number(formData.get("amount") ?? 0);
+  const returnPath =
+    String(formData.get("return_path") ?? "") || "/dashboard/parent/paiements";
 
   if (!dueId || amount < MIN_PAYMENT_FCFA) {
-    redirect("/dashboard/parent/paiements?error=invalid_amount");
+    redirect(`${returnPath}?error=invalid_amount`);
   }
 
   const { data: due } = await supabase
@@ -91,7 +146,7 @@ export async function initiateWavePayment(formData: FormData) {
     .maybeSingle();
 
   if (!due || amount > Number(due.remaining_amount)) {
-    redirect("/dashboard/parent/paiements?error=invalid_due");
+    redirect(`${returnPath}?error=invalid_due`);
   }
 
   const baseUrl = getAppBaseUrl();
@@ -102,11 +157,11 @@ export async function initiateWavePayment(formData: FormData) {
     checkout = await createWaveCheckout({
       amount,
       clientReference: ref,
-      successUrl: `${baseUrl}/dashboard/parent/paiements?wave=success`,
-      errorUrl: `${baseUrl}/dashboard/parent/paiements?wave=error`,
+      successUrl: `${baseUrl}${returnPath}?wave=success`,
+      errorUrl: `${baseUrl}${returnPath}?wave=error`,
     });
   } catch {
-    redirect("/dashboard/parent/paiements?error=wave");
+    redirect(`${returnPath}?error=wave`);
   }
 
   const { data: paymentId, error } = await supabase.rpc("initiate_wave_payment", {
@@ -117,85 +172,144 @@ export async function initiateWavePayment(formData: FormData) {
   });
 
   if (error || !paymentId) {
-    redirect("/dashboard/parent/paiements?error=payment");
+    redirect(`${returnPath}?error=payment`);
   }
 
-  revalidatePath("/dashboard/paiements");
-  revalidatePath("/dashboard/parent/paiements");
+  revalidatePaymentPaths(due.player_id);
   redirect(checkout.launchUrl);
 }
 
 export async function confirmPayment(formData: FormData) {
-  await requireTreasurer();
+  const { user } = await requireFinanceManager();
   const paymentId = String(formData.get("payment_id") ?? "");
   if (!paymentId) return;
 
   const supabase = await createClient();
+
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("id, player_id, amount, player_dues(label)")
+    .eq("id", paymentId)
+    .maybeSingle();
+
   await supabase.rpc("confirm_payment", { p_payment_id: paymentId });
 
-  revalidatePath("/dashboard/paiements");
-  revalidatePath("/dashboard/parent/paiements");
+  if (payment?.player_id) {
+    const due = payment.player_dues as { label?: string } | { label?: string }[] | null;
+    const dueLabel = Array.isArray(due) ? due[0]?.label : due?.label;
+    await notifyPlayerStakeholders({
+      playerId: payment.player_id,
+      type: "general",
+      title: "Paiement confirmé",
+      body: `Votre paiement de ${Number(payment.amount).toLocaleString("fr-CI")} FCFA${dueLabel ? ` pour « ${dueLabel} »` : ""} a été confirmé par le trésorier.`,
+      link: "/dashboard/parent/paiements",
+      excludeUserId: user.id,
+    });
+  }
+
+  revalidatePaymentPaths(payment?.player_id);
+}
+
+export async function cancelPayment(
+  _prev: PaymentFormState,
+  formData: FormData,
+): Promise<PaymentFormState> {
+  await requireFinanceManager();
+  const supabase = await createClient();
+
+  const paymentId = String(formData.get("payment_id") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+
+  if (!paymentId || !reason) {
+    return { error: "Motif d'annulation requis." };
+  }
+
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("player_id")
+    .eq("id", paymentId)
+    .maybeSingle();
+
+  const { error } = await supabase.rpc("cancel_payment", {
+    p_payment_id: paymentId,
+    p_reason: reason,
+  });
+
+  if (error) return { error: "Annulation impossible." };
+
+  revalidatePaymentPaths(payment?.player_id);
+  return { success: "Paiement annulé." };
 }
 
 export async function recordManualPayment(
   _prev: PaymentFormState,
   formData: FormData,
 ): Promise<PaymentFormState> {
-  await requireTreasurer();
+  await requireFinanceManager();
   const supabase = await createClient();
 
   const dueId = String(formData.get("due_id") ?? "");
   const amount = Number(formData.get("amount") ?? 0);
   const method = String(formData.get("payment_method") ?? "cash");
   const notes = String(formData.get("notes") ?? "").trim() || null;
+  const payerName = String(formData.get("payer_name") ?? "").trim() || null;
 
   if (!dueId || amount < MIN_PAYMENT_FCFA) {
     return { error: "Cotisation et montant requis (min. 100 FCFA)." };
   }
+
+  const { data: due } = await supabase
+    .from("player_dues")
+    .select("player_id")
+    .eq("id", dueId)
+    .maybeSingle();
 
   const { error } = await supabase.rpc("record_manual_payment", {
     p_due_id: dueId,
     p_amount: amount,
     p_method: method,
     p_notes: notes,
+    p_payer_name: payerName,
   });
 
   if (error) return { error: "Paiement manuel impossible." };
 
-  revalidatePath("/dashboard/paiements");
-  revalidatePath("/dashboard/parent/paiements");
+  revalidatePaymentPaths(due?.player_id);
   return { success: "Paiement enregistré." };
 }
 
 export async function initiateStaffWavePayment(formData: FormData) {
-  const session = await requireUser();
-  if (!canManagePayments(session.profile.role)) {
-    redirect("/dashboard");
-  }
+  await requireFinanceManager();
 
   const supabase = await createClient();
   const dueId = String(formData.get("due_id") ?? "");
   const amount = Number(formData.get("amount") ?? 0);
+  const playerId = String(formData.get("player_id") ?? "");
 
   const { data: due } = await supabase
     .from("player_dues")
-    .select("id, remaining_amount")
+    .select("id, remaining_amount, player_id")
     .eq("id", dueId)
     .maybeSingle();
 
   if (!due || amount < MIN_PAYMENT_FCFA || amount > Number(due.remaining_amount)) {
-    redirect("/dashboard/paiements?error=invalid");
+    redirect(`/dashboard/joueurs/${playerId || due?.player_id}/cotisations?error=invalid`);
   }
 
   const baseUrl = getAppBaseUrl();
   const ref = `due-${dueId}-${Date.now()}`;
 
-  const checkout = await createWaveCheckout({
-    amount,
-    clientReference: ref,
-    successUrl: `${baseUrl}/dashboard/paiements?wave=success`,
-    errorUrl: `${baseUrl}/dashboard/paiements?wave=error`,
-  });
+  let checkout;
+  try {
+    checkout = await createWaveCheckout({
+      amount,
+      clientReference: ref,
+      successUrl: `${baseUrl}/dashboard/paiements?wave=success`,
+      errorUrl: `${baseUrl}/dashboard/paiements?wave=error`,
+    });
+  } catch {
+    redirect("/dashboard/paiements?error=wave");
+  }
 
   const { error } = await supabase.rpc("initiate_wave_payment", {
     p_due_id: dueId,
@@ -205,5 +319,31 @@ export async function initiateStaffWavePayment(formData: FormData) {
   });
 
   if (error) redirect("/dashboard/paiements?error=payment");
+  revalidatePaymentPaths(due.player_id);
   redirect(checkout.launchUrl);
+}
+
+export async function notifyPaymentConfirmedToPlayer(
+  playerId: string,
+  amount: number,
+  label: string,
+  excludeUserId?: string,
+) {
+  await notifyPlayerStakeholders({
+    playerId,
+    type: "general",
+    title: "Paiement confirmé",
+    body: `Paiement de ${amount.toLocaleString("fr-CI")} FCFA confirmé pour « ${label} ».`,
+    link: "/dashboard/parent/paiements",
+    excludeUserId,
+  });
+}
+
+export async function notifyCommitteeMember(
+  userId: string,
+  title: string,
+  body: string,
+  link?: string,
+) {
+  await notifyUser({ userId, type: "general", title, body, link });
 }

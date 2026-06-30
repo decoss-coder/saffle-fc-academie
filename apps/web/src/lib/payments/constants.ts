@@ -1,3 +1,5 @@
+import type { StatusVariant } from "@/lib/dashboard-ui";
+
 export function formatFcfa(amount: number) {
   return new Intl.NumberFormat("fr-CI", {
     style: "currency",
@@ -30,3 +32,32 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
 };
 
 export const MIN_PAYMENT_FCFA = 100;
+
+export function dueStatusVariant(status: string): StatusVariant {
+  switch (status) {
+    case "paid":
+      return "good";
+    case "partial":
+      return "warn";
+    case "overdue":
+      return "bad";
+    case "cancelled":
+      return "neutral";
+    default:
+      return "warn";
+  }
+}
+
+export function paymentStatusVariant(status: string): StatusVariant {
+  switch (status) {
+    case "completed":
+      return "good";
+    case "pending":
+      return "warn";
+    case "failed":
+    case "cancelled":
+      return "bad";
+    default:
+      return "neutral";
+  }
+}

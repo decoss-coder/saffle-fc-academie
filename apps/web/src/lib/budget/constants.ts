@@ -55,7 +55,6 @@ export const COMMITTEE_ROLES = [
   "president",
   "board",
   "treasurer",
-  "coach",
   "communication",
   "logistics",
   "admin",
