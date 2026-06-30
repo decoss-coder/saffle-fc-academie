@@ -2,12 +2,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "@/app/auth/actions";
 import { CLUB } from "@/lib/club";
-import { canManagePhones } from "@/lib/auth";
-
-const baseNavItems = [
-  { href: "/dashboard", label: "Accueil" },
-  { href: "/dashboard/joueurs", label: "Joueurs" },
-];
+import {
+  canManageConvocations,
+  canManagePayments,
+  canManagePhones,
+  canManagePlayers,
+  isParentRole,
+} from "@/lib/auth";
 
 type DashboardShellProps = {
   title: string;
@@ -18,6 +19,38 @@ type DashboardShellProps = {
   children: React.ReactNode;
 };
 
+function buildNavItems(userRole: string) {
+  const items: { href: string; label: string }[] = [
+    { href: "/dashboard", label: "Accueil" },
+  ];
+
+  if (isParentRole(userRole)) {
+    items.push(
+      { href: "/dashboard/parent", label: "Mes enfants" },
+      { href: "/dashboard/parent/convocations", label: "Convocations" },
+      { href: "/dashboard/parent/paiements", label: "Paiements" },
+    );
+  }
+
+  if (canManagePlayers(userRole)) {
+    items.push({ href: "/dashboard/joueurs", label: "Joueurs" });
+  }
+
+  if (canManageConvocations(userRole)) {
+    items.push({ href: "/dashboard/convocations", label: "Convocations" });
+  }
+
+  if (canManagePayments(userRole)) {
+    items.push({ href: "/dashboard/paiements", label: "Paiements" });
+  }
+
+  if (canManagePhones(userRole)) {
+    items.push({ href: "/dashboard/admin/telephones", label: "Accès téléphone" });
+  }
+
+  return items;
+}
+
 export function DashboardShell({
   title,
   subtitle,
@@ -26,12 +59,7 @@ export function DashboardShell({
   actions,
   children,
 }: DashboardShellProps) {
-  const navItems = canManagePhones(userRole)
-    ? [
-        ...baseNavItems,
-        { href: "/dashboard/admin/telephones", label: "Accès téléphone" },
-      ]
-    : baseNavItems;
+  const navItems = buildNavItems(userRole);
 
   return (
     <div className="flex min-h-full flex-col bg-green-50">

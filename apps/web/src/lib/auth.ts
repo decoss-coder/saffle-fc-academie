@@ -36,6 +36,9 @@ export async function requireUser() {
 
 const MANAGE_PLAYERS_ROLES = new Set(["admin", "president", "coach"]);
 const ADMIN_ROLES = new Set(["admin", "president"]);
+const TREASURER_ROLES = new Set(["admin", "president", "treasurer"]);
+const CONVOCATION_ROLES = new Set(["admin", "president", "coach"]);
+const PARENT_ROLES = new Set(["parent"]);
 
 export function canManagePlayers(role: string) {
   return MANAGE_PLAYERS_ROLES.has(role);
@@ -43,6 +46,18 @@ export function canManagePlayers(role: string) {
 
 export function canManagePhones(role: string) {
   return ADMIN_ROLES.has(role);
+}
+
+export function canManagePayments(role: string) {
+  return TREASURER_ROLES.has(role);
+}
+
+export function canManageConvocations(role: string) {
+  return CONVOCATION_ROLES.has(role);
+}
+
+export function isParentRole(role: string) {
+  return PARENT_ROLES.has(role);
 }
 
 export async function requireAdmin() {
@@ -59,6 +74,43 @@ export async function requireStaff() {
     redirect("/dashboard");
   }
   return session;
+}
+
+export async function requireTreasurer() {
+  const session = await requireUser();
+  if (!canManagePayments(session.profile.role)) {
+    redirect("/dashboard");
+  }
+  return session;
+}
+
+export async function requireConvocationStaff() {
+  const session = await requireUser();
+  if (!canManageConvocations(session.profile.role)) {
+    redirect("/dashboard");
+  }
+  return session;
+}
+
+export async function getLinkedPlayerIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+) {
+  const { data: guardians } = await supabase
+    .from("player_guardians")
+    .select("player_id")
+    .eq("guardian_id", userId);
+
+  const { data: ownPlayers } = await supabase
+    .from("players")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("is_archived", false);
+
+  const ids = new Set<string>();
+  guardians?.forEach((g) => ids.add(g.player_id));
+  ownPlayers?.forEach((p) => ids.add(p.id));
+  return [...ids];
 }
 
 export { DashboardShell };
