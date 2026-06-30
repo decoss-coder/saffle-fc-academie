@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   DashboardShell,
   requireUser,
@@ -184,30 +183,6 @@ export default async function DashboardPage() {
     },
   ];
 
-  const heroActions = [
-    ...(canManagePlayers(role)
-      ? [{ label: "Voir l'effectif", href: "/dashboard/joueurs", primary: true }]
-      : []),
-    ...(canManageConvocations(role)
-      ? [
-          {
-            label: "Préparer une convocation",
-            href: "/dashboard/convocations",
-            primary: false,
-          },
-        ]
-      : []),
-    ...(canManagePayments(role)
-      ? [
-          {
-            label: "Contrôler les paiements",
-            href: "/dashboard/paiements",
-            primary: false,
-          },
-        ]
-      : []),
-  ].slice(0, 2);
-
   const quickActions = [
     ...(canManagePlayers(role)
       ? [
@@ -230,75 +205,7 @@ export default async function DashboardPage() {
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={role}
     >
-      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-        <div className="relative min-h-[320px] overflow-hidden rounded-[1.75rem] bg-[#071c16] p-6 text-white shadow-xl shadow-slate-900/10 sm:p-8">
-          <Image
-            src={CLUB.assets.formation}
-            alt="Formation SAFFLE FF"
-            fill
-            priority
-            className="object-cover opacity-25"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(7,28,22,0.94),rgba(7,28,22,0.76)_48%,rgba(7,28,22,0.34))]" />
-          <div className="relative flex h-full min-h-[260px] flex-col justify-between">
-            <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-100/70">
-                Direction sportive
-              </p>
-              <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
-                Une académie visible, organisée et prête à grandir.
-              </h2>
-              <p className="mt-4 max-w-lg text-sm leading-6 text-emerald-50/78 sm:text-base">
-                Le tableau de bord met les décisions importantes devant vous :
-                effectif, convocations, paiements et accès membres.
-              </p>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-3">
-              {heroActions.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className={
-                    action.primary
-                      ? "rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#071c16] shadow-sm transition hover:bg-emerald-50"
-                      : "rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                  }
-                >
-                  {action.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <aside className="rounded-[1.75rem] border border-[#dde6d6] bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
-            Priorités
-          </p>
-          <div className="mt-5 space-y-4">
-            {priorities.map((item) => (
-              <div
-                key={item.label}
-                className="border-b border-slate-100 pb-4 last:border-b-0 last:pb-0"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-medium text-slate-500">
-                    {item.label}
-                  </p>
-                  <p className="text-right text-sm font-semibold text-slate-950">
-                    {item.value}
-                  </p>
-                </div>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
-                  {item.detail}
-                </p>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
         {modules.map((item) => (
           <Link
             key={item.title}
@@ -331,7 +238,38 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[1.75rem] border border-[#dde6d6] bg-white p-6 shadow-sm">
+        <aside className="rounded-2xl border border-[#dde6d6] bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
+              Priorités
+            </p>
+            <span className="rounded-full bg-[#eef4e9] px-3 py-1 text-xs font-semibold text-[#245b3a]">
+              Aujourd&apos;hui
+            </span>
+          </div>
+          <div className="mt-5 space-y-4">
+            {priorities.map((item) => (
+              <div
+                key={item.label}
+                className="border-b border-slate-100 pb-4 last:border-b-0 last:pb-0"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-medium text-slate-500">
+                    {item.label}
+                  </p>
+                  <p className="text-right text-sm font-semibold text-slate-950">
+                    {item.value}
+                  </p>
+                </div>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  {item.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <div className="rounded-2xl border border-[#dde6d6] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
             Rythme club
           </p>
@@ -349,22 +287,27 @@ export default async function DashboardPage() {
             ))}
           </div>
         </div>
+      </section>
 
-        <div className="rounded-[1.75rem] border border-[#dde6d6] bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[#dde6d6] bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-400">
             Actions rapides
           </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {quickActions.map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                className="rounded-2xl border border-[#dde6d6] px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-[#b7c9ab] hover:bg-[#f6f8f3]"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
+          <p className="text-sm text-slate-500">
+            Accès directs aux opérations les plus fréquentes.
+          </p>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {quickActions.map(([label, href]) => (
+            <Link
+              key={href}
+              href={href}
+              className="rounded-2xl border border-[#dde6d6] px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-[#b7c9ab] hover:bg-[#f6f8f3]"
+            >
+              {label}
+            </Link>
+          ))}
         </div>
       </section>
     </DashboardShell>
