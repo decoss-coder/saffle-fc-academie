@@ -1,6 +1,8 @@
 # SAFFLE FC Académie
 
-Plateforme de gestion pour club et académie de football — **web**, **iOS** et **Android**.
+Plateforme numérique officielle du club **SAFFLE FC Académie**, basé à **Sinfra, Côte d'Ivoire**.
+
+Elle centralise la gestion du club — **web**, **iOS** et **Android** — pour les dirigeants, coaches, parents et joueurs.
 
 ## Stack
 

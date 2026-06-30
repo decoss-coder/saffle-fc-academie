@@ -6,8 +6,9 @@ export default function App() {
     <View style={styles.container}>
       <Text style={styles.badge}>SAFFLE FC</Text>
       <Text style={styles.title}>Académie</Text>
+      <Text style={styles.location}>Sinfra, Côte d&apos;Ivoire</Text>
       <Text style={styles.subtitle}>
-        Application mobile iOS et Android — administration, sport et paiements.
+        Application officielle du club — administration, sport et paiements.
       </Text>
       <StatusBar style="light" />
     </View>
@@ -34,6 +35,11 @@ const styles = StyleSheet.create({
     color: "#fafafa",
     fontSize: 32,
     fontWeight: "700",
+    marginBottom: 4,
+  },
+  location: {
+    color: "#71717a",
+    fontSize: 14,
     marginBottom: 12,
   },
   subtitle: {

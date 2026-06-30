@@ -19,7 +19,9 @@ export default function Home() {
               SAFFLE FC
             </p>
             <h1 className="text-2xl font-semibold">Académie</h1>
+            <p className="mt-1 text-sm text-zinc-400">Sinfra, Côte d&apos;Ivoire</p>
           </div>
+          <div className="flex items-center gap-3">
           <Link
             href="/signup"
             className="rounded-full border border-zinc-700 px-5 py-2 text-sm transition hover:border-zinc-500"
@@ -32,20 +34,22 @@ export default function Home() {
           >
             Connexion
           </Link>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-6 py-16">
         <section className="max-w-3xl space-y-6">
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-zinc-400">
-            Plateforme club
+            Sinfra, Côte d&apos;Ivoire
           </p>
           <h2 className="text-4xl font-semibold leading-tight sm:text-5xl">
-            Pilotez votre académie de football depuis une seule application.
+            La plateforme officielle du club SAFFLE FC Académie.
           </h2>
           <p className="text-lg leading-8 text-zinc-400">
-            Administration, suivi sportif, paiements, convocations et
-            communication — pour dirigeants, coaches, parents et joueurs.
+            Administration, suivi sportif, paiements en FCFA (Wave), convocations
+            et communication — pour dirigeants, coaches, parents et joueurs du
+            club.
           </p>
         </section>
 
@@ -64,10 +68,12 @@ export default function Home() {
         </section>
 
         <section className="rounded-2xl border border-zinc-800 bg-gradient-to-br from-emerald-500/10 to-zinc-900 p-8">
-          <h3 className="text-xl font-medium">Stack technique</h3>
+          <h3 className="text-xl font-medium">Le club</h3>
           <p className="mt-3 max-w-2xl text-zinc-400">
-            Application web Next.js sur Vercel, applications iOS et Android
-            avec Expo, base de données et authentification Supabase.
+            SAFFLE FC Académie est un club de football basé à Sinfra, en Côte
+            d&apos;Ivoire. Cette plateforme est son outil de gestion
+            numérique — web, iOS et Android — avec Supabase et déploiement sur
+            Vercel.
           </p>
         </section>
       </main>

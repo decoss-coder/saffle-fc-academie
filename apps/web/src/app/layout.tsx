@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SAFFLE FC Académie",
+  title: "SAFFLE FC Académie — Sinfra, Côte d'Ivoire",
   description:
-    "Plateforme de gestion pour club et académie de football — administration, sport, finances et communication.",
+    "Plateforme officielle du club SAFFLE FC Académie de Sinfra, Côte d'Ivoire — administration, sport, finances et communication.",
 };
 
 export default function RootLayout({
