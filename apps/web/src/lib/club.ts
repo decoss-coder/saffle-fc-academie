@@ -19,6 +19,8 @@ export const CLUB = {
     equipeA: "/club/equipe-a.jpg",
     equipeB: "/club/equipe-b.jpg",
     formation: "/club/formation.jpg",
+    u12Jeunes: "/club/u12-jeunes.jpg",
+    u16Jeunes: "/club/u16-jeunes.jpg",
   },
 } as const;
 

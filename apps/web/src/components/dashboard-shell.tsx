@@ -23,54 +23,124 @@ type DashboardShellProps = {
 };
 
 function buildNavItems(userRole: string) {
-  const items: { href: string; label: string }[] = [
-    { href: "/dashboard", label: "Accueil" },
-    { href: "/dashboard/notifications", label: "Notifications" },
+  const items: { href: string; label: string; icon: string; group: string }[] = [
+    { href: "/dashboard", label: "Accueil", icon: "A", group: "Pilotage" },
+    {
+      href: "/dashboard/notifications",
+      label: "Notifications",
+      icon: "N",
+      group: "Pilotage",
+    },
   ];
 
   if (isParentRole(userRole) || canUploadDocuments(userRole)) {
-    items.push(
-      { href: "/dashboard/mes-documents", label: "Documents" },
-    );
+    items.push({
+      href: "/dashboard/mes-documents",
+      label: "Documents",
+      icon: "D",
+      group: "Famille",
+    });
   }
 
   if (isParentRole(userRole)) {
     items.push(
-      { href: "/dashboard/parent", label: "Mes enfants" },
-      { href: "/dashboard/parent/convocations", label: "Convocations" },
-      { href: "/dashboard/parent/paiements", label: "Paiements" },
+      {
+        href: "/dashboard/parent",
+        label: "Mes enfants",
+        icon: "E",
+        group: "Famille",
+      },
+      {
+        href: "/dashboard/parent/convocations",
+        label: "Convocations",
+        icon: "C",
+        group: "Famille",
+      },
+      {
+        href: "/dashboard/parent/paiements",
+        label: "Paiements",
+        icon: "P",
+        group: "Famille",
+      },
     );
   }
 
   if (canManagePlayers(userRole)) {
     items.push(
-      { href: "/dashboard/joueurs", label: "Joueurs" },
-      { href: "/dashboard/documents", label: "Documents" },
+      {
+        href: "/dashboard/joueurs",
+        label: "Joueurs",
+        icon: "J",
+        group: "Club",
+      },
+      {
+        href: "/dashboard/documents",
+        label: "Documents",
+        icon: "D",
+        group: "Club",
+      },
     );
   }
 
   if (canManageConvocations(userRole)) {
-    items.push({ href: "/dashboard/convocations", label: "Convocations" });
+    items.push({
+      href: "/dashboard/convocations",
+      label: "Convocations",
+      icon: "C",
+      group: "Club",
+    });
   }
 
   if (canManageClub(userRole)) {
-    items.push({ href: "/dashboard/club", label: "Vie du club" });
+    items.push({
+      href: "/dashboard/club",
+      label: "Vie du club",
+      icon: "V",
+      group: "Club",
+    });
   }
 
   if (canManagePayments(userRole)) {
-    items.push({ href: "/dashboard/paiements", label: "Paiements" });
-    items.push({ href: "/dashboard/comite", label: "Comité directeur" });
+    items.push({
+      href: "/dashboard/paiements",
+      label: "Paiements",
+      icon: "P",
+      group: "Finance",
+    });
+    items.push({
+      href: "/dashboard/comite",
+      label: "Comité directeur",
+      icon: "B",
+      group: "Finance",
+    });
   }
 
   if (canManageBudget(userRole) || userRole === "board") {
-    items.push({ href: "/dashboard/budget", label: "Budget" });
+    items.push({
+      href: "/dashboard/budget",
+      label: "Budget",
+      icon: "F",
+      group: "Finance",
+    });
   }
 
   if (canManagePhones(userRole)) {
-    items.push({ href: "/dashboard/admin/telephones", label: "Membres" });
+    items.push({
+      href: "/dashboard/admin/telephones",
+      label: "Membres",
+      icon: "M",
+      group: "Administration",
+    });
   }
 
   return items;
+}
+
+function groupNavItems(items: ReturnType<typeof buildNavItems>) {
+  return items.reduce<Record<string, typeof items>>((groups, item) => {
+    groups[item.group] = [...(groups[item.group] ?? []), item];
+    return groups;
+  }, {});
 }
 
 export function DashboardShell({
@@ -82,60 +152,137 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const navItems = buildNavItems(userRole);
+  const navGroups = groupNavItems(navItems);
 
   return (
-    <div className="flex min-h-full flex-col bg-green-50">
-      <header className="border-b border-green-200 bg-white shadow-sm">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <Image
-              src={CLUB.assets.logo}
-              alt={CLUB.name}
-              width={44}
-              height={44}
-              className="rounded-full ring-2 ring-green-600/20"
-            />
-            <div>
-              <p className="text-sm font-semibold leading-tight text-green-900">
-                {CLUB.name}
-              </p>
-              <p className="text-xs text-green-700">
-                {userName} · {userRole}
-              </p>
-            </div>
-          </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-full border border-green-200 px-4 py-2 text-sm text-green-800 transition hover:border-green-500 hover:bg-green-50"
-              >
-                {item.label}
-              </Link>
-            ))}
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="rounded-full border border-green-300 px-4 py-2 text-sm text-green-800 transition hover:bg-green-100"
-              >
-                Déconnexion
-              </button>
-            </form>
+    <div className="min-h-full bg-[#f5f7f2] text-slate-950">
+      <div className="flex min-h-screen">
+        <aside className="hidden w-72 shrink-0 border-r border-[#dce4d4] bg-[#071c16] text-white lg:flex lg:flex-col">
+          <div className="border-b border-white/10 px-6 py-6">
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <Image
+                src={CLUB.assets.logo}
+                alt={CLUB.name}
+                width={50}
+                height={50}
+                className="rounded-xl bg-white object-cover ring-1 ring-white/20"
+              />
+              <div>
+                <p className="text-sm font-semibold leading-tight">
+                  {CLUB.shortName}
+                </p>
+                <p className="text-xs text-emerald-100/70">{CLUB.city}</p>
+              </div>
+            </Link>
           </div>
-        </div>
-      </header>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-10">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold text-green-900">{title}</h1>
-            {subtitle && <p className="mt-2 text-green-700">{subtitle}</p>}
+          <nav className="flex-1 space-y-7 px-4 py-6">
+            {Object.entries(navGroups).map(([group, items]) => (
+              <div key={group}>
+                <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/50">
+                  {group}
+                </p>
+                <div className="mt-3 space-y-1">
+                  {items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-emerald-50/80 transition hover:bg-white/10 hover:text-white"
+                    >
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-xs font-semibold text-emerald-100 ring-1 ring-white/10">
+                        {item.icon}
+                      </span>
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          <div className="border-t border-white/10 p-4">
+            <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+              <p className="text-sm font-medium">{userName}</p>
+              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-emerald-100/60">
+                {userRole}
+              </p>
+              <form action={signOut} className="mt-4">
+                <button
+                  type="submit"
+                  className="w-full rounded-xl border border-white/15 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                >
+                  Déconnexion
+                </button>
+              </form>
+            </div>
           </div>
-          {actions}
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-20 border-b border-[#dce4d4] bg-[#f8faf6]/90 backdrop-blur">
+            <div className="flex min-h-18 items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+              <Link href="/dashboard" className="flex items-center gap-3 lg:hidden">
+                <Image
+                  src={CLUB.assets.logo}
+                  alt={CLUB.name}
+                  width={42}
+                  height={42}
+                  className="rounded-xl bg-white object-cover ring-1 ring-slate-900/10"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">
+                    {CLUB.shortName}
+                  </p>
+                  <p className="text-xs text-slate-500">{userRole}</p>
+                </div>
+              </Link>
+              <div className="hidden lg:block">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Console club
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-800">
+                  {userName}
+                </p>
+              </div>
+              <div className="flex min-w-0 items-center justify-end gap-3">
+                <div className="hidden rounded-full border border-[#d6dfcf] bg-white px-4 py-2 text-sm text-slate-600 shadow-sm sm:block">
+                  {CLUB.name}
+                </div>
+                {actions}
+              </div>
+            </div>
+            <div className="flex gap-2 overflow-x-auto border-t border-[#e3eadf] px-4 py-3 sm:px-6 lg:hidden">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="shrink-0 rounded-full border border-[#d8e2d2] bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </header>
+
+          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-7">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                    {title}
+                  </h1>
+                  {subtitle && (
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {children}
+            </div>
+          </main>
         </div>
-        {children}
-      </main>
+      </div>
     </div>
   );
 }
