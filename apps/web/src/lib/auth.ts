@@ -35,9 +35,22 @@ export async function requireUser() {
 }
 
 const MANAGE_PLAYERS_ROLES = new Set(["admin", "president", "coach"]);
+const ADMIN_ROLES = new Set(["admin", "president"]);
 
 export function canManagePlayers(role: string) {
   return MANAGE_PLAYERS_ROLES.has(role);
+}
+
+export function canManagePhones(role: string) {
+  return ADMIN_ROLES.has(role);
+}
+
+export async function requireAdmin() {
+  const session = await requireUser();
+  if (!canManagePhones(session.profile.role)) {
+    redirect("/dashboard");
+  }
+  return session;
 }
 
 export async function requireStaff() {

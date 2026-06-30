@@ -1,21 +1,16 @@
 import Link from "next/link";
 import { PhoneAuthForm } from "@/components/phone-auth-form";
 import { AuthLayout } from "@/components/auth-layout";
-import { signIn } from "@/app/auth/actions";
+import { activateAccount } from "@/app/auth/actions";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const params = await searchParams;
+export default function ActiverPage() {
   const configured = isSupabaseConfigured();
 
   return (
     <AuthLayout
-      title="Accéder à la plateforme"
-      subtitle="Connexion par numéro de téléphone"
+      title="Première connexion"
+      subtitle="Activez votre accès avec votre numéro enregistré"
     >
       {!configured ? (
         <div className="space-y-4">
@@ -31,12 +26,11 @@ export default async function LoginPage({
         </div>
       ) : (
         <>
-          {params.error === "auth_callback_failed" && (
-            <p className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-              La confirmation du lien a échoué. Réessayez.
-            </p>
-          )}
-          <PhoneAuthForm mode="login" action={signIn} />
+          <p className="mb-4 text-sm text-green-700">
+            Parents : utilisez le numéro indiqué sur la fiche de votre enfant.
+            Staff : utilisez le numéro enregistré par l&apos;administration.
+          </p>
+          <PhoneAuthForm mode="activate" action={activateAccount} />
         </>
       )}
     </AuthLayout>

@@ -46,10 +46,10 @@ export default function Home() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/signup"
+                href="/activer"
                 className="rounded-full bg-green-800 px-6 py-3 text-sm font-medium text-white transition hover:bg-green-700"
               >
-                Rejoindre la plateforme
+                Activer mon compte
               </Link>
               <Link
                 href="/login"

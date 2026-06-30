@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DashboardShell, requireUser } from "@/lib/auth";
+import { DashboardShell, requireUser, canManagePhones } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { CLUB } from "@/lib/club";
 
@@ -18,6 +18,15 @@ export default async function DashboardPage() {
       href: "/dashboard/joueurs",
       status: `${count ?? 0} joueur(s) actif(s)`,
     },
+    ...(canManagePhones(profile.role)
+      ? [
+          {
+            title: "Accès téléphone",
+            href: "/dashboard/admin/telephones",
+            status: "Parents et staff autorisés",
+          },
+        ]
+      : []),
     { title: "Convocations", href: "#", status: "À venir" },
     { title: "Paiements", href: "#", status: "À venir (Wave / FCFA)" },
   ];

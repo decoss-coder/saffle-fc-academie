@@ -2,8 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "@/app/auth/actions";
 import { CLUB } from "@/lib/club";
+import { canManagePhones } from "@/lib/auth";
 
-const navItems = [
+const baseNavItems = [
   { href: "/dashboard", label: "Accueil" },
   { href: "/dashboard/joueurs", label: "Joueurs" },
 ];
@@ -25,6 +26,13 @@ export function DashboardShell({
   actions,
   children,
 }: DashboardShellProps) {
+  const navItems = canManagePhones(userRole)
+    ? [
+        ...baseNavItems,
+        { href: "/dashboard/admin/telephones", label: "Accès téléphone" },
+      ]
+    : baseNavItems;
+
   return (
     <div className="flex min-h-full flex-col bg-green-50">
       <header className="border-b border-green-200 bg-white shadow-sm">

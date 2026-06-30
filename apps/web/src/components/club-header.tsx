@@ -13,10 +13,10 @@ export function ClubHeader({ children }: ClubHeaderProps) {
         {children ?? (
           <div className="flex items-center gap-3">
             <Link
-              href="/signup"
+              href="/activer"
               className="rounded-full border border-green-700 px-5 py-2 text-sm font-medium text-green-800 transition hover:bg-green-50"
             >
-              Inscription
+              Activer mon compte
             </Link>
             <Link
               href="/login"
