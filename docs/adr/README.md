@@ -18,6 +18,7 @@ Chaque ADR suit la structure :
 | [0001](./0001-donnees-joueurs-storage-notifications.md) | Données joueurs, Storage Supabase et notifications in-app | Accepté |
 | [0002](./0002-modules-vie-du-club.md) | Modules « Vie du club » (planning, équipement, discipline, médical, matchs, intéressement, aides, logistique, transport) | Accepté |
 | [0003](./0003-budget-comite-directeur.md) | Budget prévisionnel (SG + Président + TG) et cotisations comité directeur | Accepté |
+| [0004](./0004-audit-ux-dashboard.md) | Audit UX dashboard — composants partagés, 22 pistes, import RPC sécurisé | Accepté |
 
 ## Créer un nouvel ADR
 
