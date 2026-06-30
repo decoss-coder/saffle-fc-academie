@@ -1,39 +1,29 @@
--- Réorganisation : U12 (petits), U16 (grands), Équipe A réservée (liste à venir)
--- Exécuter dans Supabase SQL Editor.
+-- Complète les U16 manquants et retire les grands du groupe U12
+-- À exécuter si vous n'avez que des joueurs U12 (ex. 21) après fix_teams_u12_u16.sql
 
--- Petits : ancien groupe U9-U10 → U12
-update public.players
-set
-  team = 'U12',
-  category = 'u12',
-  birth_date = coalesce(nullif(birth_date, '2016-01-15'::date), '2014-01-15'::date)
-where team in ('U9-U10', 'U12')
-   or (category in ('u9', 'u10') and team is distinct from 'U16');
-
--- Grands + ancienne Équipe A → U16 (la vraie Équipe A sera importée plus tard)
+-- 1. Déplacer les grands encore classés en U12
 update public.players
 set
   team = 'U16',
   category = 'u16',
   birth_date = '2010-01-15'
-where team = 'Équipe A'
-   or category = 'team_a'
-   or team = 'U14-U15';
+where team = 'U12'
+  and (
+    (first_name = 'Japhet David' and last_name = 'Kouassi')
+    or (first_name in ('Kouassi Emmanuel', 'Kouabi Emmanuel') and last_name = 'Kouassi')
+    or (first_name = 'Andre Samuel' and last_name = 'Gbagbo')
+    or (first_name = 'Gedeon' and last_name = 'Gnandé Têhi')
+    or (first_name = 'Yoro Alaman' and last_name = 'Tia')
+    or (first_name = 'Yoro' and last_name = 'Tia')
+  );
 
--- Harmoniser les noms
 update public.players
 set first_name = 'Kouabi Emmanuel'
-where first_name in ('Kouassi Emmanuel', 'Kouabi Emmanuel')
-  and last_name = 'Kouassi'
+where last_name = 'Kouassi'
+  and first_name in ('Kouassi Emmanuel', 'Kouabi Emmanuel')
   and team = 'U16';
 
-update public.players
-set first_name = 'Yoro', last_name = 'Tia'
-where phone = '+2250546239699'
-  and team = 'U16'
-  and last_name ilike '%tia%';
-
--- 3. Insérer les U16 si jamais importés (premier seed sans bloc U16)
+-- 2. Insérer les grands U16 absents de la base
 do $$
 declare
   v_matricule text;
@@ -75,7 +65,7 @@ begin
       where p.team = 'U16'
         and (
           (p.first_name = rec.first_name and p.last_name = rec.last_name)
-          or (rec.last_name = 'Tia' and p.phone = rec.phone)
+          or (rec.first_name = 'Yoro' and p.phone = rec.phone)
         )
     ) then
       continue;
@@ -99,18 +89,6 @@ begin
   end loop;
 end;
 $$;
-
--- Déplacer les grands encore en U12
-update public.players
-set team = 'U16', category = 'u16', birth_date = '2010-01-15'
-where team = 'U12'
-  and (
-    (first_name = 'Japhet David' and last_name = 'Kouassi')
-    or (first_name in ('Kouassi Emmanuel', 'Kouabi Emmanuel') and last_name = 'Kouassi')
-    or (first_name = 'Andre Samuel' and last_name = 'Gbagbo')
-    or (first_name = 'Gedeon' and last_name = 'Gnandé Têhi')
-    or (first_name in ('Yoro Alaman', 'Yoro') and last_name = 'Tia')
-  );
 
 -- Vérification
 select team, category, count(*) as total
