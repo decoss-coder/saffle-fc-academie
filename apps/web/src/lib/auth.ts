@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { DashboardShell } from "@/components/dashboard-shell";
 import { isSuperAdminIdentity } from "@/lib/super-admin";
+import { getLinkedPlayerIds } from "@/lib/guardians";
+
+export { getLinkedPlayerIds };
+export { DashboardShell } from "@/components/dashboard-shell";
 
 export type UserProfile = {
   full_name: string | null;
@@ -159,26 +162,3 @@ export async function requireConvocationStaff() {
   }
   return session;
 }
-
-export async function getLinkedPlayerIds(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-) {
-  const { data: guardians } = await supabase
-    .from("player_guardians")
-    .select("player_id")
-    .eq("guardian_id", userId);
-
-  const { data: ownPlayers } = await supabase
-    .from("players")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("is_archived", false);
-
-  const ids = new Set<string>();
-  guardians?.forEach((g) => ids.add(g.player_id));
-  ownPlayers?.forEach((p) => ids.add(p.id));
-  return [...ids];
-}
-
-export { DashboardShell };

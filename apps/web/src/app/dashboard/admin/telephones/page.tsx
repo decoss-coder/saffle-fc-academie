@@ -16,12 +16,10 @@ import {
   DataTableTh,
   ListCount,
 } from "@/components/data-table";
-import { registerStaffPhone, resendActivationHint, deactivateMember } from "./actions";
+import { registerStaffPhone } from "./actions";
 import { MemberRowActions } from "./member-row-actions";
 import { StaffPhoneForm } from "./staff-phone-form";
 import { MembresTabs } from "./membres-tabs";
-import { CLUB } from "@/lib/club";
-import { buildActivationMessage } from "@/lib/phone";
 import { ImportMembersButton } from "./import-members-button";
 
 const TABS = ["liste", "ajouter", "import"] as const;
@@ -170,10 +168,6 @@ export default async function AdminTelephonesPage({
                       fullName={entry.full_name}
                       positionTitle={entry.position_title}
                       role={entry.role}
-                      resendAction={resendActivationHint}
-                      deactivateAction={deactivateMember}
-                      buildActivationMessage={buildActivationMessage}
-                      siteUrl={CLUB.siteUrl}
                     />
                   </td>
                 </tr>

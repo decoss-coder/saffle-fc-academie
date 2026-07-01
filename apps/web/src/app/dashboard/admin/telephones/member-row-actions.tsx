@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import type { PhoneRegistryState } from "./actions";
-import { deleteMember, updateMember } from "./actions";
+import { deleteMember, updateMember, resendActivationHint, deactivateMember } from "./actions";
 import { STAFF_ROLES } from "@/lib/roles";
 import { RequiredLabel } from "@/components/form-field";
+import { CLUB } from "@/lib/club";
+import { buildActivationMessage } from "@/lib/phone";
 
 const inputClass =
   "w-full rounded-xl border border-green-200 bg-white px-3 py-2 text-sm text-green-950 outline-none ring-green-600 focus:ring-2";
@@ -15,10 +16,6 @@ type MemberRowActionsProps = {
   fullName: string | null;
   positionTitle: string | null;
   role: string;
-  resendAction: (phone: string) => Promise<PhoneRegistryState>;
-  deactivateAction: (phone: string) => Promise<PhoneRegistryState>;
-  buildActivationMessage: (siteUrl: string, phone: string) => string;
-  siteUrl: string;
 };
 
 export function MemberRowActions({
@@ -27,10 +24,6 @@ export function MemberRowActions({
   fullName,
   positionTitle,
   role,
-  resendAction,
-  deactivateAction,
-  buildActivationMessage,
-  siteUrl,
 }: MemberRowActionsProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -152,7 +145,7 @@ export function MemberRowActions({
               return;
             }
             startTransition(async () => {
-              const result = await deactivateAction(phone);
+              const result = await deactivateMember(phone);
               setMessage(result.success ?? result.error ?? null);
             });
           }}
@@ -165,10 +158,10 @@ export function MemberRowActions({
           type="button"
           disabled={pending}
           onClick={async () => {
-            const text = buildActivationMessage(siteUrl, phone);
+            const text = buildActivationMessage(CLUB.siteUrl, phone);
             try {
               await navigator.clipboard.writeText(text);
-              await resendAction(phone);
+              await resendActivationHint(phone);
               setMessage("Message copié — envoyez-le au membre par WhatsApp.");
             } catch {
               setMessage(text);

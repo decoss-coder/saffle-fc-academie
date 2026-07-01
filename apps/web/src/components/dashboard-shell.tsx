@@ -13,10 +13,10 @@ import {
   canManagePhones,
   canManagePlayers,
   canUploadDocuments,
-  getLinkedPlayerIds,
   isParentRole,
   isPlayerAccountRole,
 } from "@/lib/auth";
+import { getLinkedPlayerIds } from "@/lib/guardians";
 import {
   canViewFinance,
   canViewSalaries,
