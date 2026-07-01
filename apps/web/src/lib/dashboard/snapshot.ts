@@ -202,15 +202,13 @@ export async function fetchDashboardSnapshot(
   role: string,
   userId: string,
 ): Promise<DashboardSnapshot> {
-  const playerIds = isParentRole(role)
-    ? await getLinkedPlayerIds(supabase, userId)
-    : [];
+  const linkedPlayerIds = await getLinkedPlayerIds(supabase, userId);
 
-  const counts = await fetchRawCounts(supabase, role, userId, playerIds);
+  const counts = await fetchRawCounts(supabase, role, userId, linkedPlayerIds);
 
   if (isParentRole(role)) {
     const alerts = buildParentAlerts(counts);
-    const upcomingEvents = await fetchParentUpcomingEvents(supabase, playerIds);
+    const upcomingEvents = await fetchParentUpcomingEvents(supabase, linkedPlayerIds);
 
     return {
       kpis: buildParentKpis(counts, alerts.length),
@@ -227,11 +225,19 @@ export async function fetchDashboardSnapshot(
     fetchRhythmRawCounts(supabase, role, counts.pendingDocuments),
   ]);
 
+  const quickActions = buildStaffQuickActions(role);
+  if (!isParentRole(role) && linkedPlayerIds.length > 0) {
+    quickActions.unshift({
+      label: "Mes enfants",
+      href: "/dashboard/parent",
+    });
+  }
+
   return {
     kpis: buildStaffKpis(role, counts, alerts.length),
     alerts,
     upcomingEvents,
     rhythm: buildClubRhythm(role, rhythmCounts),
-    quickActions: buildStaffQuickActions(role),
+    quickActions,
   };
 }

@@ -213,9 +213,10 @@ export function PlayerForm({
             defaultValue={player?.phone ?? ""}
           />
           <p className="sm:col-span-2 text-sm text-slate-600">
-            Numéro du parent ou tuteur : il servira à activer le compte sur{" "}
-            <strong>/activer</strong>, puis à se connecter et voir cet enfant
-            dans « Mes enfants ».
+            Numéro du parent ou tuteur. S&apos;il appartient déjà à un membre
+            staff (admin, coach…), l&apos;enfant sera lié à son compte existant
+            — le menu <strong>Famille</strong> apparaîtra après connexion.
+            Sinon, activation sur <strong>/activer</strong>.
           </p>
           <Field
             label="Adresse"

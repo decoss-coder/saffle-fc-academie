@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "@/app/auth/actions";
 import { CLUB } from "@/lib/club";
+import { createClient } from "@/lib/supabase/server";
 import { DashboardBreadcrumbs } from "@/components/dashboard-breadcrumbs";
 import { NavIconForHref } from "@/components/nav-icons";
 import type { BreadcrumbItem } from "@/lib/dashboard-ui";
@@ -12,6 +13,7 @@ import {
   canManagePhones,
   canManagePlayers,
   canUploadDocuments,
+  getLinkedPlayerIds,
   isParentRole,
   isPlayerAccountRole,
 } from "@/lib/auth";
@@ -31,7 +33,7 @@ type DashboardShellProps = {
   children: React.ReactNode;
 };
 
-function buildNavItems(userRole: string) {
+function buildNavItems(userRole: string, showFamilyNav: boolean) {
   const items: { href: string; label: string; group: string }[] = [
     { href: "/dashboard", label: "Accueil", group: "Pilotage" },
     {
@@ -41,7 +43,7 @@ function buildNavItems(userRole: string) {
     },
   ];
 
-  if (isParentRole(userRole) || canUploadDocuments(userRole)) {
+  if (showFamilyNav || canUploadDocuments(userRole)) {
     items.push({
       href: "/dashboard/mes-documents",
       label: "Documents",
@@ -49,7 +51,7 @@ function buildNavItems(userRole: string) {
     });
   }
 
-  if (isParentRole(userRole)) {
+  if (showFamilyNav) {
     items.push(
       {
         href: "/dashboard/parent",
@@ -163,7 +165,7 @@ function groupNavItems(items: ReturnType<typeof buildNavItems>) {
   }, {});
 }
 
-export function DashboardShell({
+export async function DashboardShell({
   title,
   subtitle,
   breadcrumbs,
@@ -172,7 +174,18 @@ export function DashboardShell({
   actions,
   children,
 }: DashboardShellProps) {
-  const navItems = buildNavItems(userRole);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let showFamilyNav = isParentRole(userRole);
+  if (user && !showFamilyNav) {
+    const linkedIds = await getLinkedPlayerIds(supabase, user.id);
+    showFamilyNav = linkedIds.length > 0;
+  }
+
+  const navItems = buildNavItems(userRole, showFamilyNav);
   const navGroups = groupNavItems(navItems);
 
   return (

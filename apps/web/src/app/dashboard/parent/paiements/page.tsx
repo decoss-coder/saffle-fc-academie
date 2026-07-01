@@ -1,7 +1,7 @@
 import {
   DashboardShell,
   requireUser,
-  isParentRole,
+  canAccessFamilyPortal,
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -35,9 +35,11 @@ export default async function ParentPaymentsPage({
 }) {
   const params = await searchParams;
   const { user, profile } = await requireUser();
-  if (!isParentRole(profile.role)) redirect("/dashboard");
-
   const supabase = await createClient();
+  if (!(await canAccessFamilyPortal(supabase, user.id, profile.role))) {
+    redirect("/dashboard");
+  }
+
   const playerIds = await getLinkedPlayerIds(supabase, user.id);
 
   const { data: dues } = playerIds.length

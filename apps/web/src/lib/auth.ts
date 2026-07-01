@@ -102,6 +102,18 @@ export function isPlayerAccountRole(role: string) {
   return PLAYER_ACCOUNT_ROLES.has(role);
 }
 
+export async function canAccessFamilyPortal(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  role: string,
+) {
+  if (isParentRole(role) || isPlayerAccountRole(role)) {
+    return true;
+  }
+  const linkedIds = await getLinkedPlayerIds(supabase, userId);
+  return linkedIds.length > 0;
+}
+
 export function canUploadDocuments(role: string) {
   return isParentRole(role) || isPlayerAccountRole(role);
 }

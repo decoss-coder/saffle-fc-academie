@@ -91,18 +91,28 @@ async function ensureParentPhoneAccess(
     reason?: string;
     phone?: string;
     activated?: boolean;
+    link_mode?: "parent" | "staff_guardian" | "staff_pending";
+    registry_role?: string;
   };
 
   if (!result?.ok) {
     return { ok: false as const, reason: result?.reason ?? "unknown" };
   }
 
-  return { ok: true as const, phone: result.phone, activated: result.activated };
+  return {
+    ok: true as const,
+    phone: result.phone,
+    activated: result.activated,
+    linkMode: result.link_mode ?? "parent",
+    registryRole: result.registry_role,
+  };
 }
 
-function parentPhoneWarning(reason: string | undefined) {
-  if (reason === "phone_is_staff") {
-    return "Joueur enregistré, mais ce numéro appartient à un membre staff — le parent ne pourra pas l'utiliser pour /activer.";
+function parentPhoneWarning(
+  access: Awaited<ReturnType<typeof ensureParentPhoneAccess>>,
+) {
+  if (!access.ok && access.reason === "rpc_error") {
+    return "Joueur enregistré. Exécutez la migration staff/parent sur Supabase pour lier le téléphone.";
   }
   return null;
 }
@@ -200,7 +210,7 @@ export async function createPlayer(
   let parentWarning: string | null = null;
   if (parsed.payload.phone) {
     const parentAccess = await ensureParentPhoneAccess(supabase, playerId);
-    parentWarning = parentPhoneWarning(parentAccess.ok ? undefined : parentAccess.reason);
+    parentWarning = parentPhoneWarning(parentAccess);
   }
 
   revalidatePath("/dashboard/joueurs");

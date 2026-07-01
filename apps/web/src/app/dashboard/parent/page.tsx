@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   DashboardShell,
   requireUser,
-  isParentRole,
+  canAccessFamilyPortal,
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -15,11 +15,12 @@ import { matriculeClass } from "@/lib/dashboard-ui";
 
 export default async function ParentHomePage() {
   const { user, profile } = await requireUser();
-  if (!isParentRole(profile.role)) {
+  const supabase = await createClient();
+
+  if (!(await canAccessFamilyPortal(supabase, user.id, profile.role))) {
     redirect("/dashboard");
   }
 
-  const supabase = await createClient();
   const playerIds = await getLinkedPlayerIds(supabase, user.id);
 
   const { data: players } = playerIds.length

@@ -170,12 +170,24 @@ export default async function JoueurDetailPage({
         </InfoBanner>
       ) : null}
 
-      {canManage && normalizedPhone && parentRegistry?.role === "parent" ? (
+      {canManage && normalizedPhone ? (
         <ParentAccessCard
           playerName={playerName}
           phone={normalizedPhone}
-          activated={Boolean(parentRegistry.linked_user_id)}
-          guardianName={parentRegistry.full_name}
+          activated={Boolean(parentRegistry?.linked_user_id)}
+          guardianName={
+            parentRegistry?.full_name ??
+            player.guardian_name ??
+            player.father_name
+          }
+          linkMode={
+            parentRegistry?.role && parentRegistry.role !== "parent"
+              ? parentRegistry.linked_user_id
+                ? "staff_guardian"
+                : "staff_pending"
+              : "parent"
+          }
+          registryRole={parentRegistry?.role ?? null}
         />
       ) : null}
 

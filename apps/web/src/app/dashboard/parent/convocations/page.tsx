@@ -1,7 +1,7 @@
 import {
   DashboardShell,
   requireUser,
-  isParentRole,
+  canAccessFamilyPortal,
   getLinkedPlayerIds,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -18,9 +18,11 @@ import { EmptyState } from "@/components/empty-state";
 
 export default async function ParentConvocationsPage() {
   const { user, profile } = await requireUser();
-  if (!isParentRole(profile.role)) redirect("/dashboard");
-
   const supabase = await createClient();
+  if (!(await canAccessFamilyPortal(supabase, user.id, profile.role))) {
+    redirect("/dashboard");
+  }
+
   const playerIds = await getLinkedPlayerIds(supabase, user.id);
 
   const { data: entries } = playerIds.length
