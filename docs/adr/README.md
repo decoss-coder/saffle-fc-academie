@@ -19,6 +19,7 @@ Chaque ADR suit la structure :
 | [0002](./0002-modules-vie-du-club.md) | Modules « Vie du club » (planning, équipement, discipline, médical, matchs, intéressement, aides, logistique, transport) | Accepté |
 | [0003](./0003-budget-comite-directeur.md) | Budget prévisionnel (SG + Président + TG) et cotisations comité directeur | Accepté |
 | [0004](./0004-audit-ux-dashboard.md) | Audit UX dashboard — composants partagés, 22 pistes, import RPC sécurisé | Accepté |
+| [0005](./0005-accueil-pilotage-operational.md) | Accueil pilotage opérationnel — inbox alertes, événements, rythme club live | Accepté |
 
 ## Créer un nouvel ADR
 

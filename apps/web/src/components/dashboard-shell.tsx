@@ -279,7 +279,8 @@ export function DashboardShell({
                   </h1>
                   {breadcrumbs && breadcrumbs.length > 0 ? (
                     <DashboardBreadcrumbs items={breadcrumbs} />
-                  ) : subtitle ? (
+                  ) : null}
+                  {subtitle ? (
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                       {subtitle}
                     </p>
