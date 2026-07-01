@@ -101,7 +101,11 @@ export default async function PaiementsPage({
 
   const { profile, canManage } = await requireFinanceSession();
   const activeTab =
-    params.tab === "creer" && canManage ? "creer" : "suivi";
+    params.tab === "creer" && canManage
+      ? "creer"
+      : params.tab === "wave" && canManage
+        ? "wave"
+        : "suivi";
   const activeTeam = resolveGroup(params.groupe);
   const sort = params.sort ?? "player";
   const dir: SortDir = params.dir === "desc" ? "desc" : "asc";
@@ -228,12 +232,16 @@ export default async function PaiementsPage({
 
       {params.wave === "success" && canManage && (
         <InfoBanner title="Paiement Wave initié">
-          Confirmez l&apos;encaissement dans l&apos;onglet Suivi une fois reçu.
+          Confirmez l&apos;encaissement dans l&apos;onglet Wave une fois reçu.
         </InfoBanner>
       )}
 
       <Suspense fallback={<div className="h-10" />}>
-        <PaiementsTabs activeTab={activeTab} canManage={canManage} />
+        <PaiementsTabs
+          activeTab={activeTab}
+          canManage={canManage}
+          pendingWaveCount={pendingPayments?.length ?? 0}
+        />
       </Suspense>
 
       {activeTab === "creer" && canManage ? (
@@ -241,70 +249,67 @@ export default async function PaiementsPage({
           <CreateGroupDueForm groupCounts={groupCounts} action={createGroupDue} />
           <CreateIndividualDueForm players={playerOptions} action={createIndividualDue} />
         </div>
-      ) : (
-        <>
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-green-700">
-              Paiements Wave en attente
-            </h2>
-            {!pendingPayments?.length ? (
-              <EmptyState message="Aucun paiement Wave en attente de confirmation." />
-            ) : (
-              <div className="space-y-3">
-                {pendingPayments.map((payment) => {
-                  const player = unwrapRelation(payment.players);
-                  const due = unwrapRelation(payment.player_dues);
-                  return (
-                    <article
-                      key={payment.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4"
-                    >
-                      <div className="space-y-1">
-                        <p className="font-medium text-green-900">
-                          {formatFcfa(Number(payment.amount))} ·{" "}
-                          {player
-                            ? `${player.last_name} ${player.first_name}`
-                            : "Joueur"}
-                          {player?.team ? ` · ${player.team}` : ""}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          {due?.label ?? "Cotisation"} ·{" "}
-                          {PAYMENT_METHOD_LABELS[payment.payment_method]}
-                        </p>
-                        <StatusBadge
-                          label={PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
-                          variant={paymentStatusVariant(payment.status)}
-                        />
-                        {payment.wave_checkout_url && (
-                          <a
-                            href={payment.wave_checkout_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block text-sm text-green-800 underline"
-                          >
-                            Ouvrir le lien Wave
-                          </a>
-                        )}
-                      </div>
-                      {canManage && (
-                        <form action={confirmPayment}>
-                          <input type="hidden" name="payment_id" value={payment.id} />
-                          <button
-                            type="submit"
-                            className="rounded-full bg-green-800 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
-                          >
-                            Confirmer l&apos;encaissement
-                          </button>
-                        </form>
+      ) : activeTab === "wave" && canManage ? (
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-green-700">
+            Paiements Wave en attente de confirmation
+          </h2>
+          {!pendingPayments?.length ? (
+            <EmptyState message="Aucun paiement Wave en attente de confirmation." />
+          ) : (
+            <div className="space-y-3">
+              {pendingPayments.map((payment) => {
+                const player = unwrapRelation(payment.players);
+                const due = unwrapRelation(payment.player_dues);
+                return (
+                  <article
+                    key={payment.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4"
+                  >
+                    <div className="space-y-1">
+                      <p className="font-medium text-green-900">
+                        {formatFcfa(Number(payment.amount))} ·{" "}
+                        {player
+                          ? `${player.last_name} ${player.first_name}`
+                          : "Joueur"}
+                        {player?.team ? ` · ${player.team}` : ""}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {due?.label ?? "Cotisation"} ·{" "}
+                        {PAYMENT_METHOD_LABELS[payment.payment_method]}
+                      </p>
+                      <StatusBadge
+                        label={PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+                        variant={paymentStatusVariant(payment.status)}
+                      />
+                      {payment.wave_checkout_url && (
+                        <a
+                          href={payment.wave_checkout_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-sm text-green-800 underline"
+                        >
+                          Ouvrir le lien Wave
+                        </a>
                       )}
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          <section className="space-y-4">
+                    </div>
+                    <form action={confirmPayment}>
+                      <input type="hidden" name="payment_id" value={payment.id} />
+                      <button
+                        type="submit"
+                        className="rounded-full bg-green-800 px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
+                      >
+                        Confirmer l&apos;encaissement
+                      </button>
+                    </form>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-green-700">
@@ -458,7 +463,6 @@ export default async function PaiementsPage({
               </DataTable>
             )}
           </section>
-        </>
       )}
     </DashboardShell>
   );

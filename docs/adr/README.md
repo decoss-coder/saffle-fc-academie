@@ -24,6 +24,7 @@ Chaque ADR suit la structure :
 | [0007](./0007-modules-vie-du-club-onglets.md) | Modules Vie du club en onglets (équipement, discipline, planning, etc.) | Accepté |
 | [0008](./0008-finance-admin-onglets.md) | Finance & Administration en onglets (comité, membres, budget, mes cotisations) | Accepté |
 | [0009](./0009-crud-complet-super-admin.md) | CRUD complet (membres, cotisations, budget, planning, convocations) + super admin Boty Dia Armel | Accepté |
+| [0010](./0010-parcours-ux-une-intention.md) | Parcours UX — une intention par écran, section Parent, onglets phase 1 | Accepté |
 
 ## Créer un nouvel ADR
 

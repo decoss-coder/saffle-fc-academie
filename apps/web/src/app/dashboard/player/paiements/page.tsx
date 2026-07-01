@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   DashboardShell,
   requireUser,
@@ -25,13 +26,15 @@ import {
 } from "@/components/data-table";
 import { rowCompact } from "@/lib/dashboard-ui";
 import { ReceiptLink } from "@/app/dashboard/paiements/payment-history-client";
+import { ParentPaiementsTabs } from "@/app/dashboard/parent/parent-paiements-tabs";
 
 export default async function PlayerPaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ wave?: string; error?: string }>;
+  searchParams: Promise<{ wave?: string; error?: string; tab?: string }>;
 }) {
   const params = await searchParams;
+  const activeTab = params.tab === "historique" ? "historique" : "en-cours";
   const { user, profile } = await requireUser();
   if (!isPlayerAccountRole(profile.role)) redirect("/dashboard");
 
@@ -49,7 +52,7 @@ export default async function PlayerPaymentsPage({
     return (
       <DashboardShell
         title="Mes paiements"
-        breadcrumbs={[{ label: "Famille", href: "/dashboard" }, { label: "Paiements" }]}
+        breadcrumbs={[{ label: "Parent", href: "/dashboard/parent" }, { label: "Paiements" }]}
         userName={profile.full_name || user.email || "Utilisateur"}
         userRole={profile.role}
       >
@@ -85,7 +88,7 @@ export default async function PlayerPaymentsPage({
     <DashboardShell
       title="Mes paiements"
       breadcrumbs={[
-        { label: "Famille", href: "/dashboard" },
+        { label: "Parent", href: "/dashboard/parent" },
         { label: "Paiements" },
       ]}
       userName={profile.full_name || user.email || "Utilisateur"}
@@ -105,8 +108,16 @@ export default async function PlayerPaymentsPage({
         {player.team ? ` · ${player.team}` : ""}
       </p>
 
+      <Suspense fallback={<div className="h-10" />}>
+        <ParentPaiementsTabs
+          activeTab={activeTab}
+          pendingCount={dues?.length ?? 0}
+          historyCount={recentPayments?.length ?? 0}
+        />
+      </Suspense>
+
+      {activeTab === "en-cours" ? (
       <section className="space-y-4">
-        <h2 className="text-lg font-medium text-green-900">Cotisations en cours</h2>
         {!dues?.length ? (
           <EmptyState message="Aucune cotisation en attente." />
         ) : (
@@ -141,11 +152,10 @@ export default async function PlayerPaymentsPage({
           })
         )}
       </section>
-
-      {!!recentPayments?.length && (
-        <section className="space-y-3">
-          <h2 className="text-lg font-medium text-green-900">Historique récent</h2>
-          <DataTable
+      ) : !recentPayments?.length ? (
+        <EmptyState message="Aucun paiement enregistré pour le moment." />
+      ) : (
+        <DataTable
             count={
               <ListCount
                 count={recentPayments.length}
@@ -181,8 +191,7 @@ export default async function PlayerPaymentsPage({
                 </tr>
               ))}
             </DataTableBody>
-          </DataTable>
-        </section>
+        </DataTable>
       )}
     </DashboardShell>
   );

@@ -1,13 +1,16 @@
+import { Suspense } from "react";
 import {
   DashboardShell,
   requireDocumentUploader,
   getLinkedPlayerIds,
+  canAccessFamilyPortal,
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatCategory } from "@/lib/players/constants";
 import { DocumentUploadForm } from "@/components/document-upload-form";
 import { PlayerDocumentsList } from "@/components/player-documents-list";
 import { PlayerPhotoSection } from "@/components/player-photo-section";
+import { ParentTabs } from "@/components/parent-tabs";
 import { EmptyState } from "@/components/empty-state";
 
 export default async function MesDocumentsPage() {
@@ -34,16 +37,24 @@ export default async function MesDocumentsPage() {
         .order("created_at", { ascending: false })
     : { data: [] };
 
+  const showParentNav = await canAccessFamilyPortal(supabase, user.id, profile.role);
+
   return (
     <DashboardShell
       title="Mes documents"
       breadcrumbs={[
-        { label: "Famille", href: "/dashboard" },
+        { label: "Parent", href: "/dashboard/parent" },
         { label: "Documents" },
       ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
+      {showParentNav && (
+        <Suspense fallback={<div className="h-10" />}>
+          <ParentTabs activeTab="documents" />
+        </Suspense>
+      )}
+
       {!players?.length ? (
         <EmptyState message="Aucun joueur lié à votre compte pour déposer des documents.">
           <p className="text-sm text-green-700">

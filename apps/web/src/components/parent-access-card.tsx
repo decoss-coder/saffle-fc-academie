@@ -78,7 +78,7 @@ export function ParentAccessCard({
               <Link href="/login" className="font-medium underline">
                 /login
               </Link>{" "}
-              avec ce numéro. Le menu <strong>Famille → Mes enfants</strong>{" "}
+              avec ce numéro. Le menu <strong>Parent → Mes enfants</strong>{" "}
               affichera {playerName} en plus de vos droits {staffLabel}.
             </>
           ) : (

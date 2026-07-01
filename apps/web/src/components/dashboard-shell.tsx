@@ -33,6 +33,14 @@ type DashboardShellProps = {
   children: React.ReactNode;
 };
 
+const NAV_GROUP_ORDER = [
+  "Pilotage",
+  "Parent",
+  "Club",
+  "Finance",
+  "Administration",
+] as const;
+
 function buildNavItems(userRole: string, showFamilyNav: boolean) {
   const items: { href: string; label: string; group: string }[] = [
     { href: "/dashboard", label: "Accueil", group: "Pilotage" },
@@ -43,39 +51,42 @@ function buildNavItems(userRole: string, showFamilyNav: boolean) {
     },
   ];
 
-  if (showFamilyNav || canUploadDocuments(userRole)) {
-    items.push({
-      href: "/dashboard/mes-documents",
-      label: "Documents",
-      group: "Famille",
-    });
-  }
-
   if (showFamilyNav) {
     items.push(
       {
         href: "/dashboard/parent",
         label: "Mes enfants",
-        group: "Famille",
+        group: "Parent",
       },
       {
         href: "/dashboard/parent/convocations",
         label: "Convocations",
-        group: "Famille",
+        group: "Parent",
       },
       {
         href: "/dashboard/parent/paiements",
         label: "Paiements",
-        group: "Famille",
+        group: "Parent",
+      },
+      {
+        href: "/dashboard/mes-documents",
+        label: "Documents",
+        group: "Parent",
       },
     );
+  } else if (canUploadDocuments(userRole)) {
+    items.push({
+      href: "/dashboard/mes-documents",
+      label: "Documents",
+      group: "Parent",
+    });
   }
 
   if (isPlayerAccountRole(userRole)) {
     items.push({
       href: "/dashboard/player/paiements",
       label: "Mes paiements",
-      group: "Famille",
+      group: "Parent",
     });
   }
 
@@ -187,6 +198,7 @@ export async function DashboardShell({
 
   const navItems = buildNavItems(userRole, showFamilyNav);
   const navGroups = groupNavItems(navItems);
+  const orderedGroups = NAV_GROUP_ORDER.filter((group) => navGroups[group]?.length);
 
   return (
     <div className="min-h-full bg-[#f5f7f2] text-slate-950">
@@ -209,7 +221,9 @@ export async function DashboardShell({
           </div>
 
           <nav className="flex-1 space-y-7 overflow-y-auto px-4 py-6">
-            {Object.entries(navGroups).map(([group, items]) => (
+            {orderedGroups.map((group) => {
+              const items = navGroups[group] ?? [];
+              return (
               <div key={group}>
                 <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/50">
                   {group}
@@ -229,7 +243,8 @@ export async function DashboardShell({
                   ))}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </nav>
 
           <div className="border-t border-white/10 p-4">
