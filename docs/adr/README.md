@@ -20,6 +20,7 @@ Chaque ADR suit la structure :
 | [0003](./0003-budget-comite-directeur.md) | Budget prévisionnel (SG + Président + TG) et cotisations comité directeur | Accepté |
 | [0004](./0004-audit-ux-dashboard.md) | Audit UX dashboard — composants partagés, 22 pistes, import RPC sécurisé | Accepté |
 | [0005](./0005-accueil-pilotage-operational.md) | Accueil pilotage opérationnel — inbox alertes, événements, rythme club live | Accepté |
+| [0006](./0006-convocations-onglets.md) | Convocations en onglets Liste / Créer, stats de réponse | Accepté |
 
 ## Créer un nouvel ADR
 

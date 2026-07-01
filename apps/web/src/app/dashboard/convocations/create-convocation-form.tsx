@@ -29,6 +29,7 @@ type CreateConvocationFormProps = {
     prev: ConvocationFormState,
     formData: FormData,
   ) => Promise<ConvocationFormState>;
+  expanded?: boolean;
 };
 
 const initialState: ConvocationFormState = {};
@@ -47,6 +48,7 @@ function matchesSearch(player: PlayerOption, query: string): boolean {
 export function CreateConvocationForm({
   players,
   action,
+  expanded = false,
 }: CreateConvocationFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -218,7 +220,11 @@ export function CreateConvocationForm({
             placeholder="Rechercher par nom ou matricule…"
             className={`${inputClass} mb-2`}
           />
-          <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl border border-green-200 p-3">
+          <div
+            className={`space-y-1 overflow-y-auto rounded-xl border border-green-200 p-3 ${
+              expanded ? "max-h-[min(32rem,55vh)]" : "max-h-56"
+            }`}
+          >
             {filtered.map((p) => (
               <label
                 key={p.id}
