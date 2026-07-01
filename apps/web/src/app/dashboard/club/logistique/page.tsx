@@ -1,11 +1,23 @@
 import Link from "next/link";
-import { navActionClass } from "@/lib/dashboard-ui";
+import { Suspense } from "react";
+import { navActionClass, primaryActionClass } from "@/lib/dashboard-ui";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ClubSection } from "@/components/club-ui";
+import { ClubModuleTabs, resolveClubTab } from "@/components/club-module-tabs";
+import { InfoBanner } from "@/components/info-banner";
 import { LogisticsForm, LogisticsList } from "./logistique-client";
 
-export default async function LogistiquePage() {
+const TABS = ["liste", "creer"] as const;
+
+export default async function LogistiquePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const params = await searchParams;
+  const activeTab = resolveClubTab(params.tab, [...TABS], "liste");
+
   const { profile } = await requireStaff();
   const supabase = await createClient();
 
@@ -13,6 +25,9 @@ export default async function LogistiquePage() {
     .from("logistics_tasks")
     .select("*")
     .order("created_at", { ascending: false });
+
+  const openCount =
+    tasks?.filter((t) => t.status !== "done").length ?? 0;
 
   return (
     <DashboardShell
@@ -24,12 +39,48 @@ export default async function LogistiquePage() {
       ]}
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
-      actions={<Link href="/dashboard/club" className={navActionClass}>Retour</Link>}
+      actions={
+        activeTab === "liste" ? (
+          <Link
+            href="/dashboard/club/logistique?tab=creer"
+            className={primaryActionClass}
+          >
+            Nouvelle tâche
+          </Link>
+        ) : (
+          <Link href="/dashboard/club" className={navActionClass}>
+            Retour
+          </Link>
+        )
+      }
     >
-      <LogisticsForm />
-      <ClubSection title="Tâches">
-        <LogisticsList tasks={tasks ?? []} />
-      </ClubSection>
+      <Suspense fallback={<div className="h-10" />}>
+        <ClubModuleTabs
+          ariaLabel="Logistique"
+          defaultTab="liste"
+          activeTab={activeTab}
+          tabs={[
+            { id: "liste", label: "Tâches", count: openCount },
+            { id: "creer", label: "Créer" },
+          ]}
+        />
+      </Suspense>
+
+      {activeTab === "creer" ? (
+        <div className="max-w-2xl space-y-4">
+          <InfoBanner title="Nouvelle tâche logistique">
+            <p>
+              Planifiez l&apos;entretien du terrain, de la tondeuse, de la salle
+              de gym ou toute autre tâche du club.
+            </p>
+          </InfoBanner>
+          <LogisticsForm />
+        </div>
+      ) : (
+        <ClubSection title="Tâches">
+          <LogisticsList tasks={tasks ?? []} />
+        </ClubSection>
+      )}
     </DashboardShell>
   );
 }

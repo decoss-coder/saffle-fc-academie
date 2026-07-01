@@ -21,6 +21,7 @@ Chaque ADR suit la structure :
 | [0004](./0004-audit-ux-dashboard.md) | Audit UX dashboard — composants partagés, 22 pistes, import RPC sécurisé | Accepté |
 | [0005](./0005-accueil-pilotage-operational.md) | Accueil pilotage opérationnel — inbox alertes, événements, rythme club live | Accepté |
 | [0006](./0006-convocations-onglets.md) | Convocations en onglets Liste / Créer, stats de réponse | Accepté |
+| [0007](./0007-modules-vie-du-club-onglets.md) | Modules Vie du club en onglets (équipement, discipline, planning, etc.) | Accepté |
 
 ## Créer un nouvel ADR
 
