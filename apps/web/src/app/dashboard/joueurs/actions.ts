@@ -73,6 +73,40 @@ async function generateMatricule(supabase: Awaited<ReturnType<typeof createClien
   return matricule;
 }
 
+async function ensureParentPhoneAccess(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  playerId: string,
+) {
+  const { data, error } = await supabase.rpc("ensure_parent_phone_for_player", {
+    p_player_id: playerId,
+  });
+
+  if (error) {
+    console.error("[ensureParentPhoneAccess]", error.message);
+    return { ok: false as const, reason: "rpc_error" };
+  }
+
+  const result = data as {
+    ok?: boolean;
+    reason?: string;
+    phone?: string;
+    activated?: boolean;
+  };
+
+  if (!result?.ok) {
+    return { ok: false as const, reason: result?.reason ?? "unknown" };
+  }
+
+  return { ok: true as const, phone: result.phone, activated: result.activated };
+}
+
+function parentPhoneWarning(reason: string | undefined) {
+  if (reason === "phone_is_staff") {
+    return "Joueur enregistré, mais ce numéro appartient à un membre staff — le parent ne pourra pas l'utiliser pour /activer.";
+  }
+  return null;
+}
+
 function optionalText(value: FormDataEntryValue | null) {
   const trimmed = String(value ?? "").trim();
   return trimmed || null;
@@ -163,8 +197,19 @@ export async function createPlayer(
     };
   }
 
+  let parentWarning: string | null = null;
+  if (parsed.payload.phone) {
+    const parentAccess = await ensureParentPhoneAccess(supabase, playerId);
+    parentWarning = parentPhoneWarning(parentAccess.ok ? undefined : parentAccess.reason);
+  }
+
   revalidatePath("/dashboard/joueurs");
-  redirect(`/dashboard/joueurs/${playerId}`);
+  if (parentWarning) {
+    redirect(
+      `/dashboard/joueurs/${playerId}?parent_warning=${encodeURIComponent(parentWarning)}`,
+    );
+  }
+  redirect(`/dashboard/joueurs/${playerId}?parent_ready=1`);
 }
 
 export async function updatePlayer(
@@ -192,6 +237,10 @@ export async function updatePlayer(
   if (error) {
     console.error("[updatePlayer]", error.code, error.message, error.details);
     return { error: mapPlayerDbError(error) };
+  }
+
+  if (parsed.payload.phone) {
+    await ensureParentPhoneAccess(supabase, playerId);
   }
 
   revalidatePath("/dashboard/joueurs");

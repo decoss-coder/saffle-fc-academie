@@ -14,6 +14,9 @@ import {
 import { PlayerDocumentsList } from "@/components/player-documents-list";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { PhoneDisplay } from "@/components/phone-display";
+import { ParentAccessCard } from "@/components/parent-access-card";
+import { InfoBanner } from "@/components/info-banner";
+import { normalizePhone } from "@/lib/phone";
 import { matriculeClass, navActionClass, primaryActionClass } from "@/lib/dashboard-ui";
 import { archivePlayer } from "@/app/dashboard/joueurs/actions";
 
@@ -24,10 +27,13 @@ function display(value: string | number | null | undefined) {
 
 export default async function JoueurDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ parent_ready?: string; parent_warning?: string }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const { user, profile } = await requireUser();
   const supabase = await createClient();
 
@@ -44,6 +50,15 @@ export default async function JoueurDetailPage({
   const canManage = canManagePlayers(profile.role);
 
   const playerName = `${player.last_name} ${player.first_name}`;
+  const normalizedPhone = player.phone ? normalizePhone(player.phone) : null;
+
+  const { data: parentRegistry } = normalizedPhone
+    ? await supabase
+        .from("phone_registry")
+        .select("linked_user_id, full_name, role")
+        .eq("phone_normalized", normalizedPhone)
+        .maybeSingle()
+    : { data: null };
 
   const { data: documents } = await supabase
     .from("player_documents")
@@ -139,6 +154,31 @@ export default async function JoueurDetailPage({
         </div>
       }
     >
+      {query.parent_ready === "1" && normalizedPhone && canManage ? (
+        <InfoBanner title="Parent prêt à activer son compte">
+          <p>
+            Le numéro {player.phone} est enregistré. Le parent peut aller sur{" "}
+            <strong>/activer</strong> pour créer son mot de passe et accéder à
+            « Mes enfants ».
+          </p>
+        </InfoBanner>
+      ) : null}
+
+      {query.parent_warning && canManage ? (
+        <InfoBanner title="Attention — numéro parent">
+          <p>{decodeURIComponent(query.parent_warning)}</p>
+        </InfoBanner>
+      ) : null}
+
+      {canManage && normalizedPhone && parentRegistry?.role === "parent" ? (
+        <ParentAccessCard
+          playerName={playerName}
+          phone={normalizedPhone}
+          activated={Boolean(parentRegistry.linked_user_id)}
+          guardianName={parentRegistry.full_name}
+        />
+      ) : null}
+
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
         <PlayerAvatar
           photoPath={player.photo_url}

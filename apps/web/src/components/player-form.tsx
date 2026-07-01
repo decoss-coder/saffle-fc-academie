@@ -209,8 +209,14 @@ export function PlayerForm({
             label="Téléphone"
             name="phone"
             type="tel"
+            placeholder="07 07 20 18 33"
             defaultValue={player?.phone ?? ""}
           />
+          <p className="sm:col-span-2 text-sm text-slate-600">
+            Numéro du parent ou tuteur : il servira à activer le compte sur{" "}
+            <strong>/activer</strong>, puis à se connecter et voir cet enfant
+            dans « Mes enfants ».
+          </p>
           <Field
             label="Adresse"
             name="address"
