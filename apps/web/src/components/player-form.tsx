@@ -57,6 +57,10 @@ export function PlayerForm({
   const [state, formAction, pending] = useActionState(action, initialState);
   const isEdit = Boolean(player?.id);
   const teamDefault = player?.team ?? defaultTeamGroup ?? "";
+  const categoryDefault =
+    player?.category ??
+    PLAYER_GROUPS.find((g) => g.team === teamDefault)?.category ??
+    "";
 
   return (
     <form action={formAction} className="space-y-6">
@@ -170,7 +174,7 @@ export function PlayerForm({
               name="category"
               required
               className={inputClass}
-              defaultValue={player?.category ?? ""}
+              defaultValue={categoryDefault}
             >
               <option value="">Choisir</option>
               {PLAYER_CATEGORIES.map((item) => (

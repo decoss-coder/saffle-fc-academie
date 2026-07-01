@@ -7,23 +7,70 @@ import { requireStaff } from "@/lib/auth";
 import type { PlayerCategory } from "@/lib/players/constants";
 import { PLAYER_GROUPS as GROUPS } from "@/lib/players/constants";
 import { DEFAULT_COUNTRY } from "@/lib/players/countries";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 export type PlayerFormState = {
   error?: string;
   success?: string;
 };
 
+function mapPlayerDbError(error: PostgrestError): string {
+  if (error.code === "42703") {
+    return "Schéma base incomplet : exécutez les migrations Supabase (champs fédération joueur).";
+  }
+  if (error.code === "23505") {
+    return "Matricule ou donnée en doublon. Réessayez dans quelques secondes.";
+  }
+  if (error.code === "42501") {
+    return "Droits insuffisants pour créer un joueur.";
+  }
+  if (
+    error.message.includes("ON CONFLICT") ||
+    error.message.includes("phone_registry")
+  ) {
+    return "Ce numéro est déjà lié à un autre compte. Laissez le téléphone vide ou utilisez un autre numéro.";
+  }
+  if (error.code === "PGRST116") {
+    return "Joueur enregistré mais inaccessible (politique RLS). Contactez l'administrateur.";
+  }
+  return `Impossible d'enregistrer le joueur : ${error.message}`;
+}
+
 async function generateMatricule(supabase: Awaited<ReturnType<typeof createClient>>) {
   const year = new Date().getFullYear();
   const prefix = `SFA-${year}-`;
 
-  const { count } = await supabase
+  const { data: last } = await supabase
     .from("players")
-    .select("*", { count: "exact", head: true })
-    .like("matricule", `${prefix}%`);
+    .select("matricule")
+    .like("matricule", `${prefix}%`)
+    .order("matricule", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  const next = String((count ?? 0) + 1).padStart(3, "0");
-  return `${prefix}${next}`;
+  let counter = 1;
+  if (last?.matricule) {
+    const suffix = last.matricule.slice(prefix.length);
+    const parsed = Number.parseInt(suffix, 10);
+    if (Number.isFinite(parsed)) {
+      counter = parsed + 1;
+    }
+  }
+
+  let matricule = `${prefix}${String(counter).padStart(3, "0")}`;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { data: existing } = await supabase
+      .from("players")
+      .select("id")
+      .eq("matricule", matricule)
+      .maybeSingle();
+
+    if (!existing) return matricule;
+    counter += 1;
+    matricule = `${prefix}${String(counter).padStart(3, "0")}`;
+  }
+
+  return matricule;
 }
 
 function optionalText(value: FormDataEntryValue | null) {
@@ -101,15 +148,23 @@ export async function createPlayer(
   const { data, error } = await supabase
     .from("players")
     .insert({ matricule, ...parsed.payload })
-    .select("id")
-    .single();
+    .select("id");
 
   if (error) {
-    return { error: "Impossible d'enregistrer le joueur. Vérifiez Supabase." };
+    console.error("[createPlayer]", error.code, error.message, error.details);
+    return { error: mapPlayerDbError(error) };
+  }
+
+  const playerId = data?.[0]?.id;
+  if (!playerId) {
+    return {
+      error:
+        "Joueur peut-être créé mais introuvable. Vérifiez la liste des joueurs.",
+    };
   }
 
   revalidatePath("/dashboard/joueurs");
-  redirect(`/dashboard/joueurs/${data.id}`);
+  redirect(`/dashboard/joueurs/${playerId}`);
 }
 
 export async function updatePlayer(
@@ -135,7 +190,8 @@ export async function updatePlayer(
     .eq("id", playerId);
 
   if (error) {
-    return { error: "Impossible de mettre à jour le joueur. Vérifiez Supabase." };
+    console.error("[updatePlayer]", error.code, error.message, error.details);
+    return { error: mapPlayerDbError(error) };
   }
 
   revalidatePath("/dashboard/joueurs");
