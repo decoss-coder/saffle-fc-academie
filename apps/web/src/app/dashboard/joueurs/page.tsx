@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DashboardShell, requireUser, canManagePlayers } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { PLAYER_GROUPS } from "@/lib/players/constants";
+import { PLAYER_GROUPS, playersInTeam } from "@/lib/players/constants";
 import {
   summarizeAttendanceStatus,
   summarizePaymentStatus,
@@ -133,20 +133,17 @@ export default async function JoueursPage({
   const { data: players } = await supabase
     .from("players")
     .select(
-      "id, matricule, first_name, last_name, team, photo_url",
+      "id, matricule, first_name, last_name, team, category, photo_url",
     )
     .eq("is_archived", false)
     .order("last_name", { ascending: true });
 
   const allPlayers = players ?? [];
   const counts = Object.fromEntries(
-    PLAYER_GROUPS.map((g) => [
-      g.team,
-      allPlayers.filter((p) => p.team === g.team).length,
-    ]),
+    PLAYER_GROUPS.map((g) => [g.team, playersInTeam(allPlayers, g.team).length]),
   );
 
-  const teamPlayers = allPlayers.filter((p) => p.team === activeTeam);
+  const teamPlayers = playersInTeam(allPlayers, activeTeam);
   const playerIds = teamPlayers.map((p) => p.id);
 
   const { data: dues } = playerIds.length

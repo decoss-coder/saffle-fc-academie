@@ -23,6 +23,30 @@ export const PLAYER_GROUPS = [
   { team: "Équipe B", category: "team_b" as const, label: "Équipe B" },
 ] as const;
 
+export function resolvePlayerTeam(player: {
+  team?: string | null;
+  category?: string | null;
+}) {
+  if (player.team) {
+    const byTeam = PLAYER_GROUPS.find((group) => group.team === player.team);
+    if (byTeam) return byTeam.team;
+  }
+  if (player.category) {
+    const byCategory = PLAYER_GROUPS.find(
+      (group) => group.category === player.category,
+    );
+    if (byCategory) return byCategory.team;
+  }
+  return null;
+}
+
+export function playersInTeam<T extends { team?: string | null; category?: string | null }>(
+  players: T[],
+  team: string,
+) {
+  return players.filter((player) => resolvePlayerTeam(player) === team);
+}
+
 export function groupForCategory(category: string) {
   return PLAYER_GROUPS.find((g) => g.category === category)?.label ?? category;
 }

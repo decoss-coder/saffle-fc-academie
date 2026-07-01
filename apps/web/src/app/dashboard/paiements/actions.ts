@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { requireFinanceManager } from "@/lib/permissions";
 import { createWaveCheckout, getAppBaseUrl } from "@/lib/wave/client";
 import { MIN_PAYMENT_FCFA } from "@/lib/payments/constants";
-import { PLAYER_GROUPS } from "@/lib/players/constants";
+import { PLAYER_GROUPS, playersInTeam } from "@/lib/players/constants";
 import { notifyPlayerStakeholders, notifyUser } from "@/lib/notifications/actions";
 
 export type PaymentFormState = { error?: string; success?: string };
@@ -42,13 +42,19 @@ export async function createGroupDue(
     };
   }
 
+  const groupDef = PLAYER_GROUPS.find((g) => g.team === teamGroup);
+  if (!groupDef) {
+    return { error: "Groupe invalide." };
+  }
+
   const { data: players } = await supabase
     .from("players")
-    .select("id")
-    .eq("team", teamGroup)
+    .select("id, team, category")
     .eq("is_archived", false);
 
-  if (!players?.length) {
+  const matchingPlayers = playersInTeam(players ?? [], teamGroup);
+
+  if (!matchingPlayers.length) {
     return { error: `Aucun joueur actif dans ${teamGroup}.` };
   }
 
@@ -58,7 +64,7 @@ export async function createGroupDue(
     .eq("is_active", true)
     .maybeSingle();
 
-  const rows = players.map((player) => ({
+  const rows = matchingPlayers.map((player) => ({
     player_id: player.id,
     season_id: season?.id ?? null,
     due_type: "cotisation",
@@ -76,7 +82,7 @@ export async function createGroupDue(
 
   revalidatePaymentPaths();
   return {
-    success: `${players.length} cotisation(s) créée(s) pour ${teamGroup} — « ${label} ».`,
+    success: `${matchingPlayers.length} cotisation(s) créée(s) pour ${teamGroup} — « ${label} ».`,
   };
 }
 

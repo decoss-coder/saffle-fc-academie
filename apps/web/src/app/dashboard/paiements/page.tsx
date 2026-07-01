@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { DashboardShell } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { PLAYER_GROUPS } from "@/lib/players/constants";
+import { PLAYER_GROUPS, playersInTeam, resolvePlayerTeam } from "@/lib/players/constants";
 import {
   formatFcfa,
   PAYMENT_METHOD_LABELS,
@@ -94,13 +95,13 @@ export default async function PaiementsPage({
   }>;
 }) {
   const params = await searchParams;
+  if (params.tab === "historique") {
+    redirect("/dashboard/paiements/historique");
+  }
+
   const { profile, canManage } = await requireFinanceSession();
   const activeTab =
-    params.tab === "creer" && canManage
-      ? "creer"
-      : params.tab === "historique"
-        ? "historique"
-        : "suivi";
+    params.tab === "creer" && canManage ? "creer" : "suivi";
   const activeTeam = resolveGroup(params.groupe);
   const sort = params.sort ?? "player";
   const dir: SortDir = params.dir === "desc" ? "desc" : "asc";
@@ -110,20 +111,18 @@ export default async function PaiementsPage({
 
   const { data: players } = await supabase
     .from("players")
-    .select("id, team, first_name, last_name, matricule")
+    .select("id, team, category, first_name, last_name, matricule")
     .eq("is_archived", false)
     .order("last_name");
 
+  const activePlayers = players ?? [];
   const groupCounts = Object.fromEntries(
-    PLAYER_GROUPS.map((g) => [
-      g.team,
-      (players ?? []).filter((p) => p.team === g.team).length,
-    ]),
+    PLAYER_GROUPS.map((g) => [g.team, playersInTeam(activePlayers, g.team).length]),
   );
 
-  const playerOptions = (players ?? []).map((p) => ({
+  const playerOptions = activePlayers.map((p) => ({
     id: p.id,
-    label: `${p.last_name} ${p.first_name} · ${p.matricule} · ${p.team ?? ""}`,
+    label: `${p.last_name} ${p.first_name} · ${p.matricule} · ${resolvePlayerTeam(p) ?? ""}`,
   }));
 
   const { data: pendingPayments } = await supabase
@@ -143,7 +142,7 @@ export default async function PaiementsPage({
     .select(
       `
       id, player_id, label, amount_due, amount_paid, remaining_amount, status, due_date,
-      players ( first_name, last_name, matricule, team )
+      players ( first_name, last_name, matricule, team, category )
     `,
     )
     .in("status", ["pending", "partial", "overdue"])
@@ -154,15 +153,17 @@ export default async function PaiementsPage({
   );
   for (const due of allOpenDues ?? []) {
     const player = unwrapRelation(due.players);
-    if (player?.team && player.team in openDuesByGroup) {
-      openDuesByGroup[player.team] += 1;
+    const playerTeam = player ? resolvePlayerTeam(player) : null;
+    if (playerTeam && playerTeam in openDuesByGroup) {
+      openDuesByGroup[playerTeam] += 1;
     }
   }
 
-  const dueRows: DueRow[] = (allOpenDues ?? [])
+  const dueRows = (allOpenDues ?? [])
     .map((due) => {
       const player = unwrapRelation(due.players);
-      if (player?.team !== activeTeam) return null;
+      const playerTeam = player ? resolvePlayerTeam(player) : null;
+      if (playerTeam !== activeTeam) return null;
       const playerName = player
         ? `${player.last_name} ${player.first_name}`
         : "Joueur inconnu";
@@ -184,7 +185,7 @@ export default async function PaiementsPage({
         due_date: due.due_date,
         playerName,
         matricule: player?.matricule ?? "",
-        team: player?.team ?? "",
+        team: String(playerTeam ?? ""),
       };
     })
     .filter((r): r is DueRow => r !== null);
@@ -200,10 +201,12 @@ export default async function PaiementsPage({
 
   const tabItems = PLAYER_GROUPS.map((g) => ({
     key: g.team,
-    label: g.team,
-    count: openDuesByGroup[g.team] ?? 0,
+    label: g.label,
+    count: groupCounts[g.team] ?? 0,
     href: `/dashboard/paiements?tab=suivi&groupe=${encodeURIComponent(g.team)}`,
   }));
+  const activePlayerCount = groupCounts[activeTeam] ?? 0;
+  const activeOpenDueCount = openDuesByGroup[activeTeam] ?? 0;
 
   return (
     <DashboardShell
@@ -309,6 +312,9 @@ export default async function PaiementsPage({
                 </h2>
                 <p className="mt-1 text-sm text-slate-600">
                   Suivi par catégorie — {activeGroup?.label ?? activeTeam}
+                  {activePlayerCount > 0
+                    ? ` · ${activeOpenDueCount} cotisation${activeOpenDueCount > 1 ? "s" : ""} ouverte${activeOpenDueCount > 1 ? "s" : ""} · ${activePlayerCount} joueur${activePlayerCount > 1 ? "s" : ""} actif${activePlayerCount > 1 ? "s" : ""}`
+                    : ""}
                 </p>
               </div>
               <GroupTabs
@@ -322,7 +328,13 @@ export default async function PaiementsPage({
             <LiveSearch placeholder="Rechercher joueur ou libellé…" preserveParams={["groupe", "tab"]} />
 
             {!filteredDues.length ? (
-              <EmptyState message={`Aucune cotisation ouverte pour ${activeTeam}.`}>
+              <EmptyState
+                message={
+                  activePlayerCount > 0
+                    ? `Aucune cotisation ouverte pour ${activeGroup?.label ?? activeTeam} (${activePlayerCount} joueur${activePlayerCount > 1 ? "s" : ""} actif${activePlayerCount > 1 ? "s" : ""}).`
+                    : `Aucun joueur actif dans ${activeGroup?.label ?? activeTeam}.`
+                }
+              >
                 {canManage && (
                   <Link
                     href={`/dashboard/paiements?tab=creer&groupe=${encodeURIComponent(activeTeam)}`}
