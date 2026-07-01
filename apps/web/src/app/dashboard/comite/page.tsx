@@ -11,16 +11,17 @@ import { FinanceReadOnlyBanner } from "@/components/finance-read-only-banner";
 import { LiveSearch } from "@/components/live-search";
 import { unwrapRelation } from "@/lib/supabase/relation";
 import { requireFinanceSession } from "@/lib/permissions";
-import { navActionClass } from "@/lib/dashboard-ui";
+import { navActionClass, primaryActionClass } from "@/lib/dashboard-ui";
 import {
   BulkDueForm,
   CommitteePaymentForm,
-  DueStatusBadge,
   SingleDueForm,
-  formatFcfa,
 } from "./comite-client";
-import { ComiteTabs } from "./comite-tabs";
-import { confirmCommitteePayment } from "./actions";
+import { ComiteTabs, resolveComiteTab } from "./comite-tabs";
+import { confirmCommitteePayment, cancelCommitteeDue, updateCommitteeDue } from "./actions";
+import { DueManageActions } from "@/components/due-manage-actions";
+import { DueStatusBadge } from "@/components/due-status-badge";
+import { formatFcfa } from "@/lib/payments/constants";
 
 export default async function ComitePage({
   searchParams,
@@ -29,7 +30,7 @@ export default async function ComitePage({
 }) {
   const params = await searchParams;
   const { profile, canManage } = await requireFinanceSession();
-  const activeTab = params.tab === "creer" && canManage ? "creer" : "suivi";
+  const activeTab = resolveComiteTab(params.tab, canManage);
   const query = params.q?.trim().toLowerCase() ?? "";
   const supabase = await createClient();
 
@@ -70,9 +71,18 @@ export default async function ComitePage({
       userName={profile.full_name ?? "Utilisateur"}
       userRole={profile.role}
       actions={
-        <Link href="/dashboard/budget" className={navActionClass}>
-          ← Budget
-        </Link>
+        activeTab === "cotisations" && canManage ? (
+          <Link
+            href="/dashboard/comite?tab=creer"
+            className={primaryActionClass}
+          >
+            Nouvelle cotisation
+          </Link>
+        ) : (
+          <Link href="/dashboard/budget" className={navActionClass}>
+            ← Budget
+          </Link>
+        )
       }
     >
       {!canManage && <FinanceReadOnlyBanner />}
@@ -83,11 +93,17 @@ export default async function ComitePage({
       </InfoBanner>
 
       {params.wave === "success" && canManage && (
-        <InfoBanner title="Wave">Confirmez l&apos;encaissement dans Suivi.</InfoBanner>
+        <InfoBanner title="Wave">Confirmez l&apos;encaissement dans Cotisations.</InfoBanner>
       )}
 
       <Suspense fallback={<div className="h-10" />}>
-        <ComiteTabs activeTab={activeTab} canManage={canManage} />
+        <ComiteTabs
+          activeTab={activeTab}
+          canManage={canManage}
+          cotisationsCount={filteredDues.length}
+          membresCount={members?.length ?? 0}
+          pendingWaveCount={pendingWave?.length ?? 0}
+        />
       </Suspense>
 
       {activeTab === "creer" && canManage ? (
@@ -100,7 +116,27 @@ export default async function ComitePage({
             }))}
           />
         </div>
-      ) : (
+      ) : null}
+
+      {activeTab === "membres" ? (
+        <ClubSection title="Membres du comité">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {(members ?? []).map((m) => (
+              <div
+                key={m.phone_normalized}
+                className="rounded-xl border border-green-200 bg-white p-3 text-sm"
+              >
+                <p className="font-medium text-green-900">{m.full_name}</p>
+                <p className="text-green-700">
+                  {formatRole(m.role, m.position_title)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </ClubSection>
+      ) : null}
+
+      {activeTab === "cotisations" ? (
         <>
           {canManage && (
             <section className="space-y-4">
@@ -124,7 +160,8 @@ export default async function ComitePage({
                       >
                         <div>
                           <p className="font-medium text-green-900">
-                            {formatFcfa(Number(p.amount))} · {member?.full_name ?? "Membre"}
+                            {formatFcfa(Number(p.amount))} ·{" "}
+                            {member?.full_name ?? "Membre"}
                           </p>
                           <p className="text-sm text-slate-600">{due?.label}</p>
                           {p.wave_checkout_url && (
@@ -155,28 +192,20 @@ export default async function ComitePage({
             </section>
           )}
 
-          <ClubSection title="Membres du comité">
-            <div className="grid gap-2 sm:grid-cols-2">
-              {(members ?? []).map((m) => (
-                <div key={m.phone_normalized} className="rounded-xl border border-green-200 bg-white p-3 text-sm">
-                  <p className="font-medium text-green-900">{m.full_name}</p>
-                  <p className="text-green-700">{formatRole(m.role, m.position_title)}</p>
-                </div>
-              ))}
-            </div>
-          </ClubSection>
-
           <ClubSection title="Cotisations">
-            <LiveSearch placeholder="Rechercher membre ou libellé…" preserveParams={["tab"]} />
+            <LiveSearch
+              placeholder="Rechercher membre ou libellé…"
+              preserveParams={["tab"]}
+            />
             <div className="mt-4 space-y-4">
               {!filteredDues.length ? (
                 <EmptyState message="Aucune cotisation comité.">
                   {canManage && (
                     <Link
                       href="/dashboard/comite?tab=creer"
-                      className="inline-block rounded-full bg-green-800 px-5 py-2 text-sm text-white"
+                      className={primaryActionClass}
                     >
-                      Créer une cotisation →
+                      Créer une cotisation
                     </Link>
                   )}
                 </EmptyState>
@@ -193,12 +222,26 @@ export default async function ComitePage({
                         {member?.full_name ?? "—"} · {d.label}
                       </p>
                       <p className="text-green-700">
-                        {formatFcfa(Number(d.amount_paid))} / {formatFcfa(Number(d.amount_due))}
+                        {formatFcfa(Number(d.amount_paid))} /{" "}
+                        {formatFcfa(Number(d.amount_due))}
                         {" · "}
                         <DueStatusBadge status={d.status} />
                       </p>
                       {canManage && remaining > 0 && (
                         <CommitteePaymentForm dueId={d.id} remaining={remaining} />
+                      )}
+                      {canManage && (
+                        <DueManageActions
+                          dueId={d.id}
+                          label={d.label}
+                          amountDue={Number(d.amount_due)}
+                          dueDate={d.due_date}
+                          amountPaid={Number(d.amount_paid)}
+                          status={d.status}
+                          canManage={canManage}
+                          updateAction={updateCommitteeDue}
+                          cancelAction={cancelCommitteeDue}
+                        />
                       )}
                     </article>
                   );
@@ -207,7 +250,7 @@ export default async function ComitePage({
             </div>
           </ClubSection>
         </>
-      )}
+      ) : null}
     </DashboardShell>
   );
 }

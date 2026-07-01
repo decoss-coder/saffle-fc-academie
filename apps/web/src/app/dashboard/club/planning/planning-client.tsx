@@ -6,10 +6,10 @@ import {
   updateTrainingTarget,
   type ClubFormState,
 } from "@/app/dashboard/club/actions";
-import { DAYS_OF_WEEK, formatDay, hoursBetween } from "@/lib/club-modules/constants";
+import { DAYS_OF_WEEK } from "@/lib/club-modules/constants";
 import { ClubCard, ClubFormMessages, inputClass } from "@/components/club-ui";
 import { DataTableBody, DataTableHead, DataTableTh } from "@/components/data-table";
-import { rowCompact } from "@/lib/dashboard-ui";
+import { ScheduleTableRow } from "@/components/schedule-table-row";
 
 const initial: ClubFormState = {};
 
@@ -103,21 +103,12 @@ export function ScheduleTable({
           <DataTableTh>Horaire</DataTableTh>
           <DataTableTh>Durée</DataTableTh>
           <DataTableTh>Lieu</DataTableTh>
+          <DataTableTh>Actions</DataTableTh>
         </tr>
       </DataTableHead>
       <DataTableBody>
         {schedules.map((s) => (
-          <tr key={s.id}>
-            <td className={rowCompact}>{s.team}</td>
-            <td className={rowCompact}>{formatDay(s.day_of_week)}</td>
-            <td className={rowCompact}>
-              {s.start_time.slice(0, 5)} – {s.end_time.slice(0, 5)}
-            </td>
-            <td className={rowCompact}>
-              {hoursBetween(s.start_time, s.end_time).toFixed(1)} h
-            </td>
-            <td className={rowCompact}>{s.location ?? "—"}</td>
-          </tr>
+          <ScheduleTableRow key={s.id} schedule={s} />
         ))}
       </DataTableBody>
     </>

@@ -41,6 +41,56 @@ export async function saveTrainingSchedule(
   return { success: "Créneau d'entraînement ajouté." };
 }
 
+export async function updateTrainingSchedule(
+  _prev: ClubFormState,
+  formData: FormData,
+): Promise<ClubFormState> {
+  await requireStaff();
+  const supabase = await createClient();
+
+  const scheduleId = text(formData.get("schedule_id"));
+  const day = Number(formData.get("day_of_week"));
+  const start = text(formData.get("start_time"));
+  const end = text(formData.get("end_time"));
+  const location = text(formData.get("location")) || null;
+
+  if (!scheduleId || !start || !end || Number.isNaN(day)) {
+    return { error: "Champs obligatoires manquants." };
+  }
+
+  const { error } = await supabase
+    .from("training_schedules")
+    .update({
+      day_of_week: day,
+      start_time: start,
+      end_time: end,
+      location,
+    })
+    .eq("id", scheduleId);
+
+  if (error) return { error: "Modification impossible." };
+  revalidatePath("/dashboard/club/planning");
+  return { success: "Créneau mis à jour." };
+}
+
+export async function deleteTrainingSchedule(
+  scheduleId: string,
+): Promise<ClubFormState> {
+  await requireStaff();
+  const supabase = await createClient();
+
+  if (!scheduleId) return { error: "Créneau introuvable." };
+
+  const { error } = await supabase
+    .from("training_schedules")
+    .delete()
+    .eq("id", scheduleId);
+
+  if (error) return { error: "Suppression impossible." };
+  revalidatePath("/dashboard/club/planning");
+  return { success: "Créneau supprimé." };
+}
+
 export async function updateTrainingTarget(
   _prev: ClubFormState,
   formData: FormData,

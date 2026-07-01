@@ -29,15 +29,30 @@ export function isTreasurerGeneral(role: string) {
   return role === "treasurer" || role === "president" || role === "admin";
 }
 
-export function canViewBudget(role: string) {
-  return ["admin", "president", "treasurer", "board"].includes(role);
+export function canViewBudget(role: string, isSuperAdmin?: boolean) {
+  return (
+    isSuperAdmin ||
+    ["admin", "president", "treasurer", "board"].includes(role)
+  );
 }
 
-export function canManageBudget(role: string) {
-  return ["admin", "president", "treasurer"].includes(role);
+export function canManageBudget(role: string, isSuperAdmin?: boolean) {
+  return isSuperAdmin || ["admin", "president", "treasurer"].includes(role);
 }
 
-export async function resolveSignoffCapabilities(userId: string, role: string) {
+export async function resolveSignoffCapabilities(
+  userId: string,
+  role: string,
+  isSuperAdmin?: boolean,
+) {
+  if (isSuperAdmin) {
+    return {
+      canSignAsSG: true,
+      canSignAsPresident: true,
+      canSignAsTG: true,
+      positionTitle: "Administrateur plateforme",
+    };
+  }
   const meta = await getUserRegistryMeta(userId);
   const positionTitle = meta?.position_title;
   return {

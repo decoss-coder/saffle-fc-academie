@@ -429,6 +429,104 @@ export async function signOverBudgetExpense(
   return { success: `Décision enregistrée (${decision}).` };
 }
 
+async function recalculateBudgetTotals(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  budgetId: string,
+) {
+  const { data: lines } = await supabase
+    .from("budget_lines")
+    .select("line_type, amount_planned")
+    .eq("budget_id", budgetId);
+
+  let recettes = 0;
+  let depenses = 0;
+  for (const l of lines ?? []) {
+    if (l.line_type === "recette") recettes += Number(l.amount_planned);
+    else depenses += Number(l.amount_planned);
+  }
+
+  await supabase
+    .from("budgets")
+    .update({
+      total_recettes_planned: recettes,
+      total_depenses_planned: depenses,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", budgetId);
+}
+
+export async function updateBudgetLine(
+  _prev: BudgetFormState,
+  formData: FormData,
+): Promise<BudgetFormState> {
+  await requireTreasurer();
+  const supabase = await createClient();
+
+  const lineId = text(formData.get("line_id"));
+  const label = text(formData.get("label"));
+  const amount = num(formData.get("amount_planned"));
+
+  if (!lineId || !label || amount < 0) {
+    return { error: "Libellé et montant requis." };
+  }
+
+  const { data: line } = await supabase
+    .from("budget_lines")
+    .select("budget_id, budgets(status)")
+    .eq("id", lineId)
+    .maybeSingle();
+
+  const budget = line?.budgets as { status: string } | { status: string }[] | null;
+  const budgetStatus = Array.isArray(budget) ? budget[0]?.status : budget?.status;
+
+  if (!line || budgetStatus !== "draft") {
+    return { error: "Ligne modifiable uniquement en brouillon." };
+  }
+
+  const { error } = await supabase
+    .from("budget_lines")
+    .update({ label, amount_planned: amount })
+    .eq("id", lineId);
+
+  if (error) return { error: "Modification impossible." };
+
+  await recalculateBudgetTotals(supabase, line.budget_id);
+  revalidatePath(`/dashboard/budget/${line.budget_id}`);
+  return { success: "Ligne mise à jour." };
+}
+
+export async function deleteBudgetLine(
+  _prev: BudgetFormState,
+  formData: FormData,
+): Promise<BudgetFormState> {
+  await requireTreasurer();
+  const supabase = await createClient();
+
+  const lineId = text(formData.get("line_id"));
+  if (!lineId) return { error: "Ligne introuvable." };
+
+  const { data: line } = await supabase
+    .from("budget_lines")
+    .select("budget_id, budgets(status)")
+    .eq("id", lineId)
+    .maybeSingle();
+
+  const budget = line?.budgets as { status: string } | { status: string }[] | null;
+  const budgetStatus = Array.isArray(budget) ? budget[0]?.status : budget?.status;
+
+  if (!line || budgetStatus !== "draft") {
+    return { error: "Ligne supprimable uniquement en brouillon." };
+  }
+
+  const { error } = await supabase.from("budget_lines").delete().eq("id", lineId);
+
+  if (error) return { error: "Suppression impossible." };
+
+  await recalculateBudgetTotals(supabase, line.budget_id);
+  revalidatePath(`/dashboard/budget/${line.budget_id}`);
+  return { success: "Ligne supprimée." };
+}
+
 export async function signOverBudgetExpenseForm(formData: FormData) {
   await signOverBudgetExpense({}, formData);
 }

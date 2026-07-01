@@ -13,6 +13,7 @@ import {
   ListCount,
 } from "@/components/data-table";
 import { rowCompact, navActionClass } from "@/lib/dashboard-ui";
+import { BudgetLineActions } from "@/components/budget-line-actions";
 import {
   ActivateBudgetButton,
   BudgetLineForm,
@@ -31,10 +32,14 @@ export default async function BudgetDetailPage({
 }) {
   const { id } = await params;
   const { profile, user } = await requireUser();
-  if (!canViewBudget(profile.role)) redirect("/dashboard");
+  if (!canViewBudget(profile.role, profile.isSuperAdmin)) redirect("/dashboard");
 
   const supabase = await createClient();
-  const caps = await resolveSignoffCapabilities(user.id, profile.role);
+  const caps = await resolveSignoffCapabilities(
+    user.id,
+    profile.role,
+    profile.isSuperAdmin,
+  );
   const isTreasurer = ["admin", "president", "treasurer"].includes(profile.role);
 
   const { data: budget } = await supabase
@@ -184,6 +189,9 @@ export default async function BudgetDetailPage({
               <DataTableTh>Catégorie</DataTableTh>
               <DataTableTh>Libellé</DataTableTh>
               <DataTableTh className="text-right">Prévu</DataTableTh>
+              {isDraft && isTreasurer ? (
+                <DataTableTh>Actions</DataTableTh>
+              ) : null}
             </tr>
           </DataTableHead>
           <DataTableBody>
@@ -195,6 +203,16 @@ export default async function BudgetDetailPage({
                 <td className={`${rowCompact} text-right`}>
                   {formatFcfa(Number(l.amount_planned))}
                 </td>
+                {isDraft && isTreasurer ? (
+                  <td className={rowCompact}>
+                    <BudgetLineActions
+                      lineId={l.id}
+                      label={l.label}
+                      amountPlanned={Number(l.amount_planned)}
+                      editable
+                    />
+                  </td>
+                ) : null}
               </tr>
             ))}
           </DataTableBody>

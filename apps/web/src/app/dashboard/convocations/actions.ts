@@ -231,3 +231,61 @@ export async function updateConvocationAttendance(
   revalidatePath("/dashboard/notifications");
   return { success: "Présences enregistrées. Notifications envoyées si nécessaire." };
 }
+
+export async function updateConvocation(
+  _prev: ConvocationFormState,
+  formData: FormData,
+): Promise<ConvocationFormState> {
+  await requireConvocationStaff();
+  const supabase = await createClient();
+
+  const convocationId = String(formData.get("convocation_id") ?? "").trim();
+  const title = String(formData.get("title") ?? "").trim();
+  const eventDate = String(formData.get("event_date") ?? "");
+  const eventTime = String(formData.get("event_time") ?? "09:00");
+  const location = String(formData.get("location") ?? "").trim() || null;
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+
+  if (!convocationId || !title || !eventDate) {
+    return { error: "Titre et date requis." };
+  }
+
+  const eventDateTime = new Date(`${eventDate}T${eventTime}:00`).toISOString();
+
+  const { error } = await supabase
+    .from("convocations")
+    .update({
+      title,
+      event_date: eventDateTime,
+      location,
+      notes,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", convocationId);
+
+  if (error) return { error: "Modification impossible." };
+
+  revalidatePath(`/dashboard/convocations/${convocationId}`);
+  revalidatePath("/dashboard/convocations");
+  return { success: "Convocation mise à jour." };
+}
+
+export async function deleteConvocation(
+  convocationId: string,
+): Promise<ConvocationFormState> {
+  await requireConvocationStaff();
+  const supabase = await createClient();
+
+  if (!convocationId) return { error: "Convocation introuvable." };
+
+  const { error } = await supabase
+    .from("convocations")
+    .delete()
+    .eq("id", convocationId);
+
+  if (error) return { error: "Suppression impossible." };
+
+  revalidatePath("/dashboard/convocations");
+  revalidatePath("/dashboard/parent/convocations");
+  return { success: "Convocation supprimée." };
+}

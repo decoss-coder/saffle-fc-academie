@@ -127,6 +127,99 @@ export async function createIndividualDue(
   return { success: `Cotisation « ${label} » créée.` };
 }
 
+export async function updatePlayerDue(
+  _prev: PaymentFormState,
+  formData: FormData,
+): Promise<PaymentFormState> {
+  await requireFinanceManager();
+  const supabase = await createClient();
+
+  const dueId = String(formData.get("due_id") ?? "").trim();
+  const label = String(formData.get("label") ?? "").trim();
+  const amount = Number(formData.get("amount_due") ?? 0);
+  const dueDate = String(formData.get("due_date") ?? "") || null;
+
+  if (!dueId || !label || amount < MIN_PAYMENT_FCFA) {
+    return { error: "Libellé et montant requis (min. 100 FCFA)." };
+  }
+
+  const { data: due } = await supabase
+    .from("player_dues")
+    .select("amount_paid, player_id, status")
+    .eq("id", dueId)
+    .maybeSingle();
+
+  if (!due) return { error: "Cotisation introuvable." };
+  if (Number(due.amount_paid) > 0) {
+    return { error: "Impossible de modifier une cotisation déjà payée." };
+  }
+  if (due.status === "cancelled" || due.status === "paid") {
+    return { error: "Cette cotisation n'est plus modifiable." };
+  }
+
+  const { error } = await supabase
+    .from("player_dues")
+    .update({
+      label,
+      amount_due: amount,
+      due_date: dueDate,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", dueId);
+
+  if (error) return { error: "Modification impossible." };
+
+  revalidatePaymentPaths(due.player_id);
+  return { success: "Cotisation mise à jour." };
+}
+
+export async function cancelPlayerDue(
+  _prev: PaymentFormState,
+  formData: FormData,
+): Promise<PaymentFormState> {
+  await requireFinanceManager();
+  const supabase = await createClient();
+
+  const dueId = String(formData.get("due_id") ?? "").trim();
+  if (!dueId) return { error: "Cotisation introuvable." };
+
+  const { data: due } = await supabase
+    .from("player_dues")
+    .select("amount_paid, player_id, status")
+    .eq("id", dueId)
+    .maybeSingle();
+
+  if (!due) return { error: "Cotisation introuvable." };
+  if (Number(due.amount_paid) > 0) {
+    return { error: "Impossible d'annuler une cotisation partiellement payée." };
+  }
+
+  const { count: pendingPayments } = await supabase
+    .from("payments")
+    .select("*", { count: "exact", head: true })
+    .eq("player_due_id", dueId)
+    .eq("status", "pending");
+
+  if ((pendingPayments ?? 0) > 0) {
+    return {
+      error: "Annulez d'abord les paiements Wave en attente pour cette cotisation.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("player_dues")
+    .update({
+      status: "cancelled",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", dueId);
+
+  if (error) return { error: "Annulation impossible." };
+
+  revalidatePaymentPaths(due.player_id);
+  return { success: "Cotisation annulée." };
+}
+
 export async function initiateWavePayment(formData: FormData) {
   await requireUser();
   const supabase = await createClient();

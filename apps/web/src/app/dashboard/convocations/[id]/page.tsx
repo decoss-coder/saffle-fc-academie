@@ -8,6 +8,7 @@ import {
 } from "@/lib/convocations/constants";
 import { unwrapRelation } from "@/lib/supabase/relation";
 import { ConvocationAttendanceForm } from "@/components/convocation-attendance-form";
+import { ConvocationAdminPanel } from "@/components/convocation-admin-panel";
 import { navActionClass } from "@/lib/dashboard-ui";
 
 export default async function ConvocationDetailPage({
@@ -73,6 +74,8 @@ export default async function ConvocationDetailPage({
         </Link>
       }
     >
+      <ConvocationAdminPanel convocation={convocation} />
+
       <div className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
         <p className="text-green-700">{formatDateTime(convocation.event_date)}</p>
         {convocation.location && (

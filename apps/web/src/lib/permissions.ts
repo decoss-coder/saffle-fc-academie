@@ -13,20 +13,20 @@ const FINANCE_VIEWER_ROLES = new Set([
   "logistics",
 ]);
 
-export function canManageFinance(role: string) {
-  return FINANCE_MANAGER_ROLES.has(role);
+export function canManageFinance(role: string, isSuperAdmin?: boolean) {
+  return isSuperAdmin || FINANCE_MANAGER_ROLES.has(role);
 }
 
-export function canViewFinance(role: string) {
-  return FINANCE_VIEWER_ROLES.has(role);
+export function canViewFinance(role: string, isSuperAdmin?: boolean) {
+  return isSuperAdmin || FINANCE_VIEWER_ROLES.has(role);
 }
 
-export function canManageSalaries(role: string) {
-  return FINANCE_MANAGER_ROLES.has(role);
+export function canManageSalaries(role: string, isSuperAdmin?: boolean) {
+  return isSuperAdmin || FINANCE_MANAGER_ROLES.has(role);
 }
 
-export function canViewSalaries(role: string) {
-  return FINANCE_MANAGER_ROLES.has(role);
+export function canViewSalaries(role: string, isSuperAdmin?: boolean) {
+  return isSuperAdmin || FINANCE_MANAGER_ROLES.has(role);
 }
 
 export function isCommitteeRegistryRole(role: string) {
@@ -43,7 +43,8 @@ export async function getLinkedRegistryPhone(userId: string) {
   return data;
 }
 
-export async function isCommitteeMember(userId: string) {
+export async function isCommitteeMember(userId: string, isSuperAdmin?: boolean) {
+  if (isSuperAdmin) return true;
   const registry = await getLinkedRegistryPhone(userId);
   if (!registry) return false;
   return isCommitteeRegistryRole(registry.role);
@@ -51,7 +52,7 @@ export async function isCommitteeMember(userId: string) {
 
 export async function requireFinanceViewer() {
   const session = await requireUser();
-  if (!canViewFinance(session.profile.role)) {
+  if (!canViewFinance(session.profile.role, session.profile.isSuperAdmin)) {
     redirect("/dashboard");
   }
   return session;
@@ -59,7 +60,7 @@ export async function requireFinanceViewer() {
 
 export async function requireFinanceManager() {
   const session = await requireUser();
-  if (!canManageFinance(session.profile.role)) {
+  if (!canManageFinance(session.profile.role, session.profile.isSuperAdmin)) {
     redirect("/dashboard");
   }
   return session;
@@ -67,7 +68,7 @@ export async function requireFinanceManager() {
 
 export async function requireSalaryViewer() {
   const session = await requireUser();
-  if (!canViewSalaries(session.profile.role)) {
+  if (!canViewSalaries(session.profile.role, session.profile.isSuperAdmin)) {
     redirect("/dashboard");
   }
   return session;
@@ -75,7 +76,7 @@ export async function requireSalaryViewer() {
 
 export async function requireSalaryManager() {
   const session = await requireUser();
-  if (!canManageSalaries(session.profile.role)) {
+  if (!canManageSalaries(session.profile.role, session.profile.isSuperAdmin)) {
     redirect("/dashboard");
   }
   return session;
@@ -83,7 +84,10 @@ export async function requireSalaryManager() {
 
 export async function requireCommitteeMember() {
   const session = await requireUser();
-  const member = await isCommitteeMember(session.user.id);
+  const member = await isCommitteeMember(
+    session.user.id,
+    session.profile.isSuperAdmin,
+  );
   if (!member) {
     redirect("/dashboard");
   }
@@ -100,6 +104,9 @@ export async function requireFinanceSession(): Promise<FinanceSession> {
   const session = await requireFinanceViewer();
   return {
     ...session,
-    canManage: canManageFinance(session.profile.role),
+    canManage: canManageFinance(
+      session.profile.role,
+      session.profile.isSuperAdmin,
+    ),
   };
 }

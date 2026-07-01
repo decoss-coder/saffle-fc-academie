@@ -9,7 +9,7 @@ import {
   PAYMENT_STATUS_LABELS,
   paymentStatusVariant,
 } from "@/lib/payments/constants";
-import { confirmPayment, createGroupDue, createIndividualDue } from "./actions";
+import { confirmPayment, createGroupDue, createIndividualDue, cancelPlayerDue, updatePlayerDue } from "./actions";
 import { CreateGroupDueForm } from "./create-group-due-form";
 import { CreateIndividualDueForm } from "./create-individual-due-form";
 import { GroupTabs } from "@/components/group-tabs";
@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/empty-state";
 import { InfoBanner } from "@/components/info-banner";
 import { FinanceReadOnlyBanner } from "@/components/finance-read-only-banner";
 import { DueStatusBadge } from "@/components/due-status-badge";
+import { DueManageActions } from "@/components/due-manage-actions";
 import { StatusBadge } from "@/components/status-badge";
 import { LiveSearch } from "@/components/live-search";
 import {
@@ -392,6 +393,7 @@ export default async function PaiementsPage({
                       params={listParams}
                     />
                     <DataTableTh className="w-10" />
+                    {canManage ? <DataTableTh>Actions</DataTableTh> : null}
                   </tr>
                 </DataTableHead>
                 <DataTableBody>
@@ -422,6 +424,21 @@ export default async function PaiementsPage({
                         <td className={rowCompact}>
                           <DueStatusBadge status={due.status} />
                         </td>
+                        {canManage ? (
+                          <td className={rowCompact}>
+                            <DueManageActions
+                              dueId={due.id}
+                              label={due.label}
+                              amountDue={Number(due.amount_due)}
+                              dueDate={due.due_date}
+                              amountPaid={Number(due.amount_due) - Number(due.remaining_amount)}
+                              status={due.status}
+                              canManage={canManage}
+                              updateAction={updatePlayerDue}
+                              cancelAction={cancelPlayerDue}
+                            />
+                          </td>
+                        ) : null}
                       </ClickableTableRow>
                     );
                   })}

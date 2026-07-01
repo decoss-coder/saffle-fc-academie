@@ -310,3 +310,82 @@ export async function cancelCommitteePayment(
   revalidateComite();
   return { success: "Paiement annulé." };
 }
+
+export async function updateCommitteeDue(
+  _prev: ComiteFormState,
+  formData: FormData,
+): Promise<ComiteFormState> {
+  await requireFinanceManager();
+  const supabase = await createClient();
+
+  const dueId = text(formData.get("due_id"));
+  const label = text(formData.get("label"));
+  const amount = num(formData.get("amount_due"));
+  const dueDate = text(formData.get("due_date")) || null;
+
+  if (!dueId || !label || amount < MIN_PAYMENT_FCFA) {
+    return { error: "Libellé et montant requis." };
+  }
+
+  const { data: due } = await supabase
+    .from("committee_dues")
+    .select("amount_paid, status")
+    .eq("id", dueId)
+    .maybeSingle();
+
+  if (!due) return { error: "Cotisation introuvable." };
+  if (Number(due.amount_paid) > 0) {
+    return { error: "Impossible de modifier une cotisation déjà payée." };
+  }
+  if (due.status === "cancelled" || due.status === "paid") {
+    return { error: "Cette cotisation n'est plus modifiable." };
+  }
+
+  const { error } = await supabase
+    .from("committee_dues")
+    .update({
+      label,
+      amount_due: amount,
+      due_date: dueDate,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", dueId);
+
+  if (error) return { error: "Modification impossible." };
+  revalidateComite();
+  return { success: "Cotisation mise à jour." };
+}
+
+export async function cancelCommitteeDue(
+  _prev: ComiteFormState,
+  formData: FormData,
+): Promise<ComiteFormState> {
+  await requireFinanceManager();
+  const supabase = await createClient();
+
+  const dueId = text(formData.get("due_id"));
+  if (!dueId) return { error: "Cotisation introuvable." };
+
+  const { data: due } = await supabase
+    .from("committee_dues")
+    .select("amount_paid, status")
+    .eq("id", dueId)
+    .maybeSingle();
+
+  if (!due) return { error: "Cotisation introuvable." };
+  if (Number(due.amount_paid) > 0) {
+    return { error: "Impossible d'annuler une cotisation partiellement payée." };
+  }
+
+  const { error } = await supabase
+    .from("committee_dues")
+    .update({
+      status: "cancelled",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", dueId);
+
+  if (error) return { error: "Annulation impossible." };
+  revalidateComite();
+  return { success: "Cotisation annulée." };
+}

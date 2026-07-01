@@ -22,6 +22,8 @@ Chaque ADR suit la structure :
 | [0005](./0005-accueil-pilotage-operational.md) | Accueil pilotage opérationnel — inbox alertes, événements, rythme club live | Accepté |
 | [0006](./0006-convocations-onglets.md) | Convocations en onglets Liste / Créer, stats de réponse | Accepté |
 | [0007](./0007-modules-vie-du-club-onglets.md) | Modules Vie du club en onglets (équipement, discipline, planning, etc.) | Accepté |
+| [0008](./0008-finance-admin-onglets.md) | Finance & Administration en onglets (comité, membres, budget, mes cotisations) | Accepté |
+| [0009](./0009-crud-complet-super-admin.md) | CRUD complet (membres, cotisations, budget, planning, convocations) + super admin Boty Dia Armel | Accepté |
 
 ## Créer un nouvel ADR
 
