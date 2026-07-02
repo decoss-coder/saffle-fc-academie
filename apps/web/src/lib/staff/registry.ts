@@ -1,4 +1,5 @@
 import { COMMITTEE_ROLES } from "@/lib/budget/constants";
+import { phoneToPathSegment } from "@/lib/phone";
 
 export const AGENTS_BASE_PATH = "/dashboard/admin/agents";
 
@@ -6,7 +7,7 @@ export function staffMemberHref(
   phoneNormalized: string,
   options?: { from?: "comite" | "agents" },
 ) {
-  const base = `${AGENTS_BASE_PATH}/${encodeURIComponent(phoneNormalized)}`;
+  const base = `${AGENTS_BASE_PATH}/${phoneToPathSegment(phoneNormalized)}`;
   if (options?.from === "comite") {
     return `${base}?from=comite`;
   }

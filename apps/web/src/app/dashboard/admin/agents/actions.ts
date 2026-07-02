@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normalizePhone, phoneToAuthEmail } from "@/lib/phone";
+import { normalizePhone, phoneToAuthEmail, phoneToPathSegment } from "@/lib/phone";
 import { STAFF_ROLES } from "@/lib/roles";
 import { isProtectedMemberPhone } from "@/lib/super-admin";
 
@@ -175,9 +175,9 @@ export async function updateMember(
     revalidatePath("/dashboard/admin/agents");
     revalidatePath("/dashboard/admin/telephones");
     revalidatePath("/dashboard/comite");
-    revalidatePath(`/dashboard/admin/agents/${encodeURIComponent(oldPhone)}`);
+    revalidatePath(`/dashboard/admin/agents/${phoneToPathSegment(oldPhone)}`);
     if (newPhone !== oldPhone) {
-      revalidatePath(`/dashboard/admin/agents/${encodeURIComponent(newPhone)}`);
+      revalidatePath(`/dashboard/admin/agents/${phoneToPathSegment(newPhone)}`);
     }
   };
 
@@ -287,7 +287,7 @@ export async function updateMember(
 
   return {
     success: `${fullName} mis à jour avec le nouveau numéro.`,
-    redirectTo: `/dashboard/admin/agents/${encodeURIComponent(newPhone)}${query}`,
+    redirectTo: `/dashboard/admin/agents/${phoneToPathSegment(newPhone)}${query}`,
   };
 }
 

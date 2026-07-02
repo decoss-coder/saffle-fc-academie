@@ -24,6 +24,22 @@ export function normalizePhone(raw: string): string | null {
   return `+${normalized}`;
 }
 
+/** Segment d'URL sans caractères spéciaux (évite les 404 avec + / %2B). */
+export function phoneToPathSegment(normalizedPhone: string): string {
+  return normalizedPhone.replace(/\D/g, "");
+}
+
+/** Retrouve le numéro normalisé depuis un segment de route dynamique. */
+export function phoneFromPathSegment(segment: string): string | null {
+  const raw = decodeURIComponent(segment).trim();
+  if (!raw) return null;
+
+  const direct = normalizePhone(raw);
+  if (direct) return direct;
+
+  return normalizePhone(raw.replace(/\D/g, ""));
+}
+
 /** Email technique Supabase dérivé du téléphone */
 export function phoneToAuthEmail(normalizedPhone: string): string {
   return `${normalizedPhone.replace(/\D/g, "")}@phone.saffle-fc.local`;

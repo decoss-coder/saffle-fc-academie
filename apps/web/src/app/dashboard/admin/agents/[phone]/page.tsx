@@ -6,6 +6,7 @@ import { formatRole } from "@/lib/roles";
 import { navActionClass } from "@/lib/dashboard-ui";
 import { InfoBanner } from "@/components/info-banner";
 import { StatusBadge } from "@/components/status-badge";
+import { phoneFromPathSegment } from "@/lib/phone";
 import { isCommitteeMemberRole } from "@/lib/staff/registry";
 import { updateMember } from "../actions";
 import { StaffMemberForm } from "../staff-member-form";
@@ -20,7 +21,8 @@ export default async function StaffMemberDetailPage({
 }) {
   const { phone: phoneParam } = await params;
   const { from } = await searchParams;
-  const phoneNormalized = decodeURIComponent(phoneParam);
+  const phoneNormalized = phoneFromPathSegment(phoneParam);
+  if (!phoneNormalized) notFound();
 
   const { user, profile } = await requireAdmin();
   const supabase = await createClient();
