@@ -121,6 +121,7 @@ const NAV_ICON_MAP: Record<string, ComponentType<NavIconProps>> = {
   "/dashboard/parent/convocations": NavIconCalendar,
   "/dashboard/parent/paiements": NavIconWallet,
   "/dashboard/joueurs": NavIconBall,
+  "/dashboard/parents": NavIconUsers,
   "/dashboard/documents": NavIconDoc,
   "/dashboard/convocations": NavIconCalendar,
   "/dashboard/club": NavIconBuilding,
