@@ -40,6 +40,7 @@ export default async function AdminTelephonesPage({
     .select(
       "phone_normalized, role, full_name, position_title, linked_user_id, created_at",
     )
+    .neq("role", "parent")
     .order("created_at", { ascending: false });
 
   const { count: playerCount } = await supabase
@@ -53,6 +54,7 @@ export default async function AdminTelephonesPage({
   return (
     <DashboardShell
       title="Membres & accès"
+      subtitle="Bureau, encadrement et staff du club — hors parents (voir l'onglet Parents)."
       breadcrumbs={[
         { label: "Administration", href: "/dashboard" },
         { label: "Membres" },

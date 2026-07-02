@@ -98,6 +98,11 @@ function buildNavItems(userRole: string, showFamilyNav: boolean) {
         group: "Club",
       },
       {
+        href: "/dashboard/parents",
+        label: "Parents",
+        group: "Club",
+      },
+      {
         href: "/dashboard/documents",
         label: "Documents",
         group: "Club",
@@ -127,11 +132,6 @@ function buildNavItems(userRole: string, showFamilyNav: boolean) {
       label: "Paiements",
       group: "Finance",
     });
-    items.push({
-      href: "/dashboard/comite",
-      label: "Comité directeur",
-      group: "Finance",
-    });
   }
 
   if (canViewSalaries(userRole)) {
@@ -155,6 +155,14 @@ function buildNavItems(userRole: string, showFamilyNav: boolean) {
       href: "/dashboard/budget",
       label: "Budget",
       group: "Finance",
+    });
+  }
+
+  if (canViewFinance(userRole)) {
+    items.push({
+      href: "/dashboard/comite",
+      label: "Comité directeur",
+      group: "Administration",
     });
   }
 

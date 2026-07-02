@@ -120,6 +120,7 @@ async function fetchRawCounts(
     { count: pendingWavePayments },
     { count: pendingDocuments },
     { count: unactivatedMembers },
+    { count: unactivatedParents },
     { count: overdueDues },
     { count: expiringMedicalCerts },
     unreadNotifications,
@@ -149,6 +150,14 @@ async function fetchRawCounts(
           .from("phone_registry")
           .select("*", { count: "exact", head: true })
           .is("linked_user_id", null)
+          .neq("role", "parent")
+      : Promise.resolve({ count: 0 }),
+    canManagePlayers(role)
+      ? supabase
+          .from("phone_registry")
+          .select("*", { count: "exact", head: true })
+          .is("linked_user_id", null)
+          .eq("role", "parent")
       : Promise.resolve({ count: 0 }),
     canManagePayments(role)
       ? supabase
@@ -187,6 +196,7 @@ async function fetchRawCounts(
     pendingWavePayments: pendingWavePayments ?? 0,
     pendingDocuments: pendingDocuments ?? 0,
     unactivatedMembers: unactivatedMembers ?? 0,
+    unactivatedParents: unactivatedParents ?? 0,
     overdueDues: overdueDues ?? 0,
     expiringMedicalCerts: expiringMedicalCerts ?? 0,
     unreadNotifications,

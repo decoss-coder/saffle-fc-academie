@@ -17,7 +17,8 @@ import {
   CommitteePaymentForm,
   SingleDueForm,
 } from "./comite-client";
-import { ComiteTabs, resolveComiteTab } from "./comite-tabs";
+import { ComiteTabs } from "./comite-tabs";
+import { resolveComiteTab } from "@/lib/resolve-comite-tab";
 import { confirmCommitteePayment, cancelCommitteeDue, updateCommitteeDue } from "./actions";
 import { DueManageActions } from "@/components/due-manage-actions";
 import { DueStatusBadge } from "@/components/due-status-badge";
@@ -65,7 +66,7 @@ export default async function ComitePage({
     <DashboardShell
       title="Comité directeur"
       breadcrumbs={[
-        { label: "Finance", href: "/dashboard" },
+        { label: "Administration", href: "/dashboard" },
         { label: "Comité directeur" },
       ]}
       userName={profile.full_name ?? "Utilisateur"}

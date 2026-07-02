@@ -43,6 +43,7 @@ export type RawAlertCounts = {
   overdueDues: number;
   expiringMedicalCerts: number;
   unactivatedMembers: number;
+  unactivatedParents: number;
   activePlayers: number;
   linkedChildren: number;
   parentPendingConvocations: number;
@@ -125,12 +126,25 @@ export function buildStaffAlerts(
     });
   }
 
-  if (canManagePhones(role) && counts.unactivatedMembers > 0) {
+  if (canManagePlayers(role) && counts.unactivatedParents > 0) {
     alerts.push({
-      id: "members-unactivated",
+      id: "parents-unactivated",
       priority: "normal",
       variant: "neutral",
-      title: `${counts.unactivatedMembers} membre(s) sans compte activé`,
+      title: `${counts.unactivatedParents} parent(s) sans compte activé`,
+      detail: "Inviter à activer via /activer",
+      href: "/dashboard/parents?statut=en-attente",
+      module: "Parents",
+      count: counts.unactivatedParents,
+    });
+  }
+
+  if (canManagePhones(role) && counts.unactivatedMembers > 0) {
+    alerts.push({
+      id: "staff-unactivated",
+      priority: "normal",
+      variant: "neutral",
+      title: `${counts.unactivatedMembers} membre(s) staff sans compte activé`,
       detail: "Inviter à activer via /activer",
       href: "/dashboard/admin/telephones",
       module: "Membres",
@@ -237,9 +251,16 @@ export function buildStaffKpis(
     });
   }
 
+  if (canManagePlayers(role)) {
+    kpis.push({
+      label: "Parents non activés",
+      value: counts.unactivatedParents,
+    });
+  }
+
   if (canManagePhones(role)) {
     kpis.push({
-      label: "Non activés",
+      label: "Staff non activés",
       value: counts.unactivatedMembers,
     });
   }

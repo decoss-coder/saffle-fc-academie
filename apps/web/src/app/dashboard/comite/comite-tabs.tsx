@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import type { ComiteTab } from "@/lib/resolve-comite-tab";
 
-export type ComiteTab = "cotisations" | "membres" | "creer";
+export type { ComiteTab };
 
 type ComiteTabsProps = {
   activeTab: ComiteTab;
@@ -72,14 +73,4 @@ export function ComiteTabs({
       )}
     </nav>
   );
-}
-
-export function resolveComiteTab(
-  tab: string | undefined,
-  canManage: boolean,
-): ComiteTab {
-  if (tab === "creer" && canManage) return "creer";
-  if (tab === "membres") return "membres";
-  if (tab === "suivi") return "cotisations";
-  return "cotisations";
 }
