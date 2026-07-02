@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { normalizePhone } from "@/lib/phone";
+import { normalizePhone, phoneFromPathSegment, phoneToPathSegment } from "@/lib/phone";
 import { unwrapRelation } from "@/lib/supabase/relation";
 
 export type ParentDirectoryEntry = {
@@ -47,7 +47,7 @@ export function buildParentKey(
   if (guardianUserId) return `u-${guardianUserId}`;
   const normalized = normalizePhone(phone);
   if (!normalized) return null;
-  return `p-${encodeURIComponent(normalized)}`;
+  return `p-${phoneToPathSegment(normalized)}`;
 }
 
 export function parentDetailHref(key: string) {
@@ -72,7 +72,9 @@ export function parseParentKey(key: string): {
     return { type: "user", value: key.slice(2) };
   }
   if (key.startsWith("p-")) {
-    return { type: "phone", value: decodeURIComponent(key.slice(2)) };
+    const phone = phoneFromPathSegment(key.slice(2));
+    if (!phone) throw new Error("invalid_parent_key");
+    return { type: "phone", value: phone };
   }
   throw new Error("invalid_parent_key");
 }
@@ -156,7 +158,7 @@ export async function fetchParentDirectory(
     const key =
       draft.key ??
       buildParentKey(draft.phone, draft.guardianUserId) ??
-      `p-${encodeURIComponent(draft.phone)}`;
+      `p-${phoneToPathSegment(draft.phone)}`;
     const existing = entries.get(key);
     const childIds = playersByPhone.get(draft.phone) ?? [];
 
