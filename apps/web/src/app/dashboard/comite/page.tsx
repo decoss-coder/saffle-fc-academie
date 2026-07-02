@@ -22,6 +22,8 @@ import { resolveComiteTab } from "@/lib/resolve-comite-tab";
 import { confirmCommitteePayment, cancelCommitteeDue, updateCommitteeDue } from "./actions";
 import { DueManageActions } from "@/components/due-manage-actions";
 import { DueStatusBadge } from "@/components/due-status-badge";
+import { ClickableCard } from "@/components/clickable-card";
+import { staffMemberHref } from "@/lib/staff/registry";
 import { formatFcfa } from "@/lib/payments/constants";
 
 export default async function ComitePage({
@@ -123,15 +125,15 @@ export default async function ComitePage({
         <ClubSection title="Membres du comité">
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {(members ?? []).map((m) => (
-              <div
+              <ClickableCard
                 key={m.phone_normalized}
-                className="rounded-xl border border-green-200 bg-white p-3 text-sm"
+                href={staffMemberHref(m.phone_normalized, { from: "comite" })}
               >
                 <p className="font-medium text-green-900">{m.full_name}</p>
                 <p className="text-green-700">
                   {formatRole(m.role, m.position_title)}
                 </p>
-              </div>
+              </ClickableCard>
             ))}
           </div>
         </ClubSection>

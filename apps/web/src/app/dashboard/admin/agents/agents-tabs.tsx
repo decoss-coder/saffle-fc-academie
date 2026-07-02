@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
-type MembresTabsProps = {
+type AgentsTabsProps = {
   activeTab: "liste" | "ajouter" | "import";
-  membersCount: number;
+  agentsCount: number;
   pendingCount: number;
 };
 
-export function MembresTabs({
+export function AgentsTabs({
   activeTab,
-  membersCount,
+  agentsCount,
   pendingCount,
-}: MembresTabsProps) {
+}: AgentsTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -32,7 +32,7 @@ export function MembresTabs({
     }`;
 
   return (
-    <nav className="flex flex-wrap gap-2" aria-label="Membres">
+    <nav className="flex flex-wrap gap-2" aria-label="Agents">
       <Link href={buildHref("liste")} className={tabClass("liste")}>
         Liste
         <span
@@ -42,7 +42,7 @@ export function MembresTabs({
               : "bg-green-100 text-green-800"
           }`}
         >
-          {membersCount}
+          {agentsCount}
         </span>
       </Link>
       <Link href={buildHref("ajouter")} className={tabClass("ajouter")}>

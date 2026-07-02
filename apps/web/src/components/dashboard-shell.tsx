@@ -168,8 +168,8 @@ function buildNavItems(userRole: string, showFamilyNav: boolean) {
 
   if (canManagePhones(userRole)) {
     items.push({
-      href: "/dashboard/admin/telephones",
-      label: "Membres",
+      href: "/dashboard/admin/agents",
+      label: "Agents",
       group: "Administration",
     });
   }
