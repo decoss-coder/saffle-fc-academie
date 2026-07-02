@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/empty-state";
 import { InfoBanner } from "@/components/info-banner";
 import { StatusBadge } from "@/components/status-badge";
 import { PhoneDisplay } from "@/components/phone-display";
-import { resolveClubTab } from "@/components/club-module-tabs";
+import { resolveClubTab } from "@/lib/resolve-club-tab";
 import {
   DataTable,
   DataTableBody,

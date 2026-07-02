@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ClickableCard } from "@/components/clickable-card";
 import { InfoBanner } from "@/components/info-banner";
 import { navActionClass, primaryActionClass } from "@/lib/dashboard-ui";
-import { resolveClubTab } from "@/components/club-module-tabs";
+import { resolveClubTab } from "@/lib/resolve-club-tab";
 
 const TABS = ["liste", "creer"] as const;
 
