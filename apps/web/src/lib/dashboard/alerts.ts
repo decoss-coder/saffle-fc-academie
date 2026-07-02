@@ -144,10 +144,10 @@ export function buildStaffAlerts(
       id: "staff-unactivated",
       priority: "normal",
       variant: "neutral",
-      title: `${counts.unactivatedMembers} membre(s) staff sans compte activé`,
+      title: `${counts.unactivatedMembers} agent(s) staff sans compte activé`,
       detail: "Inviter à activer via /activer",
-      href: "/dashboard/admin/telephones",
-      module: "Membres",
+      href: "/dashboard/admin/agents",
+      module: "Agents",
       count: counts.unactivatedMembers,
     });
   }
@@ -260,7 +260,7 @@ export function buildStaffKpis(
 
   if (canManagePhones(role)) {
     kpis.push({
-      label: "Staff non activés",
+      label: "Agents non activés",
       value: counts.unactivatedMembers,
     });
   }

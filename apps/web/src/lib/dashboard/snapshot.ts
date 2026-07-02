@@ -8,6 +8,7 @@ import {
   isParentRole,
   getLinkedPlayerIds,
 } from "@/lib/auth";
+import { COMMITTEE_ROLES } from "@/lib/budget/constants";
 import {
   buildParentAlerts,
   buildParentKpis,
@@ -151,6 +152,11 @@ async function fetchRawCounts(
           .select("*", { count: "exact", head: true })
           .is("linked_user_id", null)
           .neq("role", "parent")
+          .not(
+            "role",
+            "in",
+            `(${COMMITTEE_ROLES.map((r) => `"${r}"`).join(",")})`,
+          )
       : Promise.resolve({ count: 0 }),
     canManagePlayers(role)
       ? supabase

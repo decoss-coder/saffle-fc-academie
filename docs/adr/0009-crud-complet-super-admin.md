@@ -91,7 +91,7 @@ Cette livraison inclut aussi la refonte onglets documentée dans [ADR-0008](./00
 ### Négatives / limites
 
 - Pas encore de CRUD sur : matchs, inventaire, salaires (après création), documents
-- Modification du **numéro de téléphone** d'un membre non supportée (clé primaire `phone_registry`)
+- ~~Modification du **numéro de téléphone** d'un membre non supportée~~ → supportée pour les membres non protégés ([ADR-0012](./0012-annuaire-administration-parents-comite-agents.md))
 - Suppression membre : cascade sur `committee_dues` non payées — à communiquer aux admins
 
 ### Suites possibles

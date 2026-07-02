@@ -132,6 +132,7 @@ const NAV_ICON_MAP: Record<string, ComponentType<NavIconProps>> = {
   "/dashboard/player/paiements": NavIconWallet,
   "/dashboard/paiements/historique": NavIconWallet,
   "/dashboard/budget": NavIconChart,
+  "/dashboard/admin/agents": NavIconShield,
   "/dashboard/admin/telephones": NavIconShield,
 };
 
