@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { DashboardShell, requireStaff } from "@/lib/auth";
+import { canManagePhones, DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatRole } from "@/lib/roles";
 import { rowCompact } from "@/lib/dashboard-ui";
@@ -17,6 +17,7 @@ import {
   ListCount,
 } from "@/components/data-table";
 import {
+  canManageParentEntry,
   fetchParentDirectory,
   parentDetailHref,
 } from "@/lib/parents/directory";
@@ -36,6 +37,7 @@ export default async function AdminParentsPage({
   const { user, profile } = await requireStaff();
   const supabase = await createClient();
   const allParents = await fetchParentDirectory(supabase);
+  const canManage = canManagePhones(profile.role, profile.isSuperAdmin);
 
   const activeCount = allParents.filter((p) => p.activated).length;
   const pendingCount = allParents.filter((p) => !p.activated).length;
@@ -98,7 +100,7 @@ export default async function AdminParentsPage({
             <DataTableTh>Enfants</DataTableTh>
             <DataTableTh>À suivre</DataTableTh>
             <DataTableTh>Statut</DataTableTh>
-            <DataTableTh>Fiche</DataTableTh>
+            <DataTableTh>Actions</DataTableTh>
           </tr>
         </DataTableHead>
         <DataTableBody>
@@ -113,9 +115,12 @@ export default async function AdminParentsPage({
               <tr key={parent.key} className="hover:bg-green-50">
                 <td className={rowCompact}>
                   <div>
-                    <p className="font-medium text-green-950">
+                    <Link
+                      href={parentDetailHref(parent.key)}
+                      className="font-medium text-green-950 hover:text-green-800 hover:underline"
+                    >
                       {parent.displayName}
-                    </p>
+                    </Link>
                     {parent.isStaffGuardian && parent.accountRole ? (
                       <p className="mt-0.5 text-xs text-amber-800">
                         {formatRole(parent.accountRole)} · aussi parent
@@ -162,12 +167,22 @@ export default async function AdminParentsPage({
                   )}
                 </td>
                 <td className={rowCompact}>
-                  <Link
-                    href={parentDetailHref(parent.key)}
-                    className="font-medium text-green-800 underline hover:text-green-900"
-                  >
-                    Voir la fiche
-                  </Link>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    <Link
+                      href={parentDetailHref(parent.key)}
+                      className="font-medium text-green-800 underline hover:text-green-900"
+                    >
+                      Voir la fiche
+                    </Link>
+                    {canManage && canManageParentEntry(parent) ? (
+                      <Link
+                        href={`${parentDetailHref(parent.key)}?tab=fiche`}
+                        className="font-medium text-green-800 underline hover:text-green-900"
+                      >
+                        Modifier
+                      </Link>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ))

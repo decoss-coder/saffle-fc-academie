@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { DashboardShell, requireStaff } from "@/lib/auth";
+import { canManagePhones, DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatRole } from "@/lib/roles";
 import { normalizePhone } from "@/lib/phone";
@@ -35,10 +35,14 @@ import {
   ListCount,
 } from "@/components/data-table";
 import { ReceiptLink } from "@/app/dashboard/paiements/payment-history-client";
-import { fetchParentDetail } from "@/lib/parents/directory";
+import { fetchParentDetail, canManageParentEntry } from "@/lib/parents/directory";
 import { ParentDetailTabs } from "../parent-detail-tabs";
+import { updateParent } from "../actions";
+import { ParentForm } from "../parent-form";
+import { ParentSecondaryActions } from "../parent-secondary-actions";
 
 const DETAIL_TABS = [
+  "fiche",
   "enfants",
   "paiements",
   "convocations",
@@ -48,7 +52,10 @@ const DETAIL_TABS = [
 
 type DetailTab = (typeof DETAIL_TABS)[number];
 
-function resolveDetailTab(tab?: string): DetailTab {
+function resolveDetailTab(tab: string | undefined, manageable: boolean): DetailTab {
+  if (tab === "fiche" && !manageable) {
+    return "enfants";
+  }
   if (tab && DETAIL_TABS.includes(tab as DetailTab)) {
     return tab as DetailTab;
   }
@@ -64,7 +71,6 @@ export default async function AdminParentDetailPage({
 }) {
   const { key } = await params;
   const { tab } = await searchParams;
-  const activeTab = resolveDetailTab(tab);
 
   const { user, profile } = await requireStaff();
   const supabase = await createClient();
@@ -77,6 +83,10 @@ export default async function AdminParentDetailPage({
   }
 
   if (!parent) notFound();
+
+  const canManage = canManagePhones(profile.role, profile.isSuperAdmin);
+  const manageable = canManage && canManageParentEntry(parent);
+  const activeTab = resolveDetailTab(tab, manageable);
 
   const playerIds = parent.children.map((child) => child.id);
   const normalizedPhone =
@@ -211,8 +221,42 @@ export default async function AdminParentDetailPage({
       </div>
 
       <Suspense fallback={<div className="h-10" />}>
-        <ParentDetailTabs parentKey={key} activeTab={activeTab} />
+        <ParentDetailTabs
+          parentKey={key}
+          activeTab={activeTab}
+          showFicheTab={manageable}
+        />
       </Suspense>
+
+      {activeTab === "fiche" && manageable && normalizedPhone ? (
+        <div className="space-y-6">
+          <ParentForm
+            action={updateParent}
+            defaultValues={{
+              phone_normalized: normalizedPhone,
+              full_name: parent.displayName,
+            }}
+          />
+          <ParentSecondaryActions
+            phone={normalizedPhone}
+            linkedUserId={registry?.linked_user_id ?? parent.guardianUserId}
+          />
+        </div>
+      ) : null}
+
+      {parent.isStaffGuardian && canManage && activeTab !== "fiche" ? (
+        <InfoBanner title="Parent membre du staff">
+          Ce profil est lié à un compte staff. Pour modifier le nom, le numéro ou
+          supprimer le compte, utilisez la fiche dans{" "}
+          <Link
+            href="/dashboard/admin/agents"
+            className="font-medium underline"
+          >
+            Agents
+          </Link>
+          .
+        </InfoBanner>
+      ) : null}
 
       {activeTab === "enfants" && (
         <>
