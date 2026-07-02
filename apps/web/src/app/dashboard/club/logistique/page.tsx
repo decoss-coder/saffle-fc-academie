@@ -4,7 +4,8 @@ import { navActionClass, primaryActionClass } from "@/lib/dashboard-ui";
 import { DashboardShell, requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ClubSection } from "@/components/club-ui";
-import { ClubModuleTabs, resolveClubTab } from "@/components/club-module-tabs";
+import { ClubModuleTabs } from "@/components/club-module-tabs";
+import { resolveClubTab } from "@/lib/resolve-club-tab";
 import { InfoBanner } from "@/components/info-banner";
 import { LogisticsForm, LogisticsList } from "./logistique-client";
 
