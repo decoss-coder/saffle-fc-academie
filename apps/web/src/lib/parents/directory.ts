@@ -54,6 +54,16 @@ export function parentDetailHref(key: string) {
   return `/dashboard/parents/${key}`;
 }
 
+export function canManageParentEntry(
+  entry: Pick<ParentDirectoryEntry, "key" | "phone" | "isStaffGuardian">,
+): boolean {
+  return (
+    !entry.isStaffGuardian &&
+    entry.key.startsWith("p-") &&
+    !entry.phone.startsWith("staff-")
+  );
+}
+
 export function parseParentKey(key: string): {
   type: "user" | "phone";
   value: string;

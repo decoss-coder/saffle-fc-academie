@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
   DashboardShell,
@@ -19,10 +20,19 @@ import { InfoBanner } from "@/components/info-banner";
 import { normalizePhone } from "@/lib/phone";
 import { matriculeClass, navActionClass, primaryActionClass } from "@/lib/dashboard-ui";
 import { archivePlayer } from "@/app/dashboard/joueurs/actions";
+import { PlayerDetailTabs } from "./player-detail-tabs";
 
 function display(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return "—";
   return String(value);
+}
+
+type DetailTab = "profil" | "documents" | "acces" | "admin";
+
+function resolveTab(tab: string | undefined, canManage: boolean): DetailTab {
+  if (!canManage) return "profil";
+  if (tab === "documents" || tab === "acces" || tab === "admin") return tab;
+  return "profil";
 }
 
 export default async function JoueurDetailPage({
@@ -30,7 +40,11 @@ export default async function JoueurDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ parent_ready?: string; parent_warning?: string }>;
+  searchParams: Promise<{
+    parent_ready?: string;
+    parent_warning?: string;
+    tab?: string;
+  }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -48,6 +62,7 @@ export default async function JoueurDetailPage({
   }
 
   const canManage = canManagePlayers(profile.role);
+  const activeTab = resolveTab(query.tab, canManage);
 
   const playerName = `${player.last_name} ${player.first_name}`;
   const normalizedPhone = player.phone ? normalizePhone(player.phone) : null;
@@ -145,10 +160,7 @@ export default async function JoueurDetailPage({
               Modifier
             </Link>
           )}
-          <Link
-            href="/dashboard/joueurs"
-            className={navActionClass}
-          >
+          <Link href="/dashboard/joueurs" className={navActionClass}>
             Retour à la liste
           </Link>
         </div>
@@ -170,7 +182,86 @@ export default async function JoueurDetailPage({
         </InfoBanner>
       ) : null}
 
-      {canManage && normalizedPhone ? (
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+        <PlayerAvatar
+          photoPath={player.photo_url}
+          firstName={player.first_name}
+          lastName={player.last_name}
+          size="xl"
+        />
+        <div>
+          <p className="text-lg font-semibold text-green-900">{playerName}</p>
+          <p className={matriculeClass}>
+            {player.matricule}
+            {player.team ? ` · ${player.team}` : ""}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-sm">
+            <Link
+              href={`/dashboard/joueurs/${player.id}/cotisations`}
+              className="rounded-full border border-green-300 px-3 py-1 text-green-800 hover:bg-green-50"
+            >
+              Cotisations
+            </Link>
+            <Link
+              href={`/dashboard/joueurs/${player.id}/presences`}
+              className="rounded-full border border-green-300 px-3 py-1 text-green-800 hover:bg-green-50"
+            >
+              Présences
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <Suspense fallback={<div className="h-10" />}>
+        <PlayerDetailTabs
+          playerId={player.id}
+          activeTab={activeTab}
+          canManage={canManage}
+        />
+      </Suspense>
+
+      {activeTab === "profil" && (
+        <div className="space-y-6">
+          {sections.map((section) => (
+            <section key={section.title}>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-green-700">
+                {section.title}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {section.fields.map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="rounded-2xl border border-green-200 bg-white p-4 shadow-sm"
+                  >
+                    <p className="text-sm text-green-700">{label}</p>
+                    {label === "Téléphone" && player.phone ? (
+                      <div className="mt-1">
+                        <PhoneDisplay phone={player.phone} className="text-base" />
+                      </div>
+                    ) : (
+                      <p className="mt-1 font-medium text-green-900">{value}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {activeTab === "documents" && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-green-700">
+            Documents déposés
+          </h2>
+          <PlayerDocumentsList
+            documents={documents ?? []}
+            canReview={canManage}
+          />
+        </section>
+      )}
+
+      {activeTab === "acces" && canManage && normalizedPhone && (
         <ParentAccessCard
           playerName={playerName}
           phone={normalizedPhone}
@@ -189,76 +280,33 @@ export default async function JoueurDetailPage({
           }
           registryRole={parentRegistry?.role ?? null}
         />
-      ) : null}
+      )}
 
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-        <PlayerAvatar
-          photoPath={player.photo_url}
-          firstName={player.first_name}
-          lastName={player.last_name}
-          size="xl"
-        />
-        <div>
-          <p className="text-lg font-semibold text-green-900">{playerName}</p>
-          <p className={matriculeClass}>
-            {player.matricule}
-            {player.team ? ` · ${player.team}` : ""}
+      {activeTab === "acces" && canManage && !normalizedPhone && (
+        <InfoBanner title="Aucun numéro parent">
+          <p>
+            Ajoutez un numéro de téléphone sur la fiche joueur pour activer
+            l&apos;accès parent.
           </p>
-          <p className="mt-2 text-sm text-slate-600">
-            {player.photo_url
-              ? "Photo de profil enregistrée"
-              : "Aucune photo — le parent ou le joueur peut en déposer une depuis Documents"}
-          </p>
-        </div>
-      </div>
+        </InfoBanner>
+      )}
 
-      <div className="space-y-6">
-        {sections.map((section) => (
-          <section key={section.title}>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-green-700">
-              {section.title}
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {section.fields.map(([label, value]) => (
-                <div
-                  key={label}
-                  className="rounded-2xl border border-green-200 bg-white p-4 shadow-sm"
-                >
-                  <p className="text-sm text-green-700">{label}</p>
-                  {label === "Téléphone" && player.phone ? (
-                    <div className="mt-1">
-                      <PhoneDisplay phone={player.phone} className="text-base" />
-                    </div>
-                  ) : (
-                    <p className="mt-1 font-medium text-green-900">{value}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-
-      <section className="pt-2">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-green-700">
-          Documents déposés
-        </h2>
-        <PlayerDocumentsList
-          documents={documents ?? []}
-          canReview={canManage}
-        />
-      </section>
-
-      {canManage && !player.is_archived && (
-        <form action={archivePlayer} className="pt-6">
-          <input type="hidden" name="player_id" value={player.id} />
-          <button
-            type="submit"
-            className="rounded-full border border-red-300 px-5 py-2 text-sm text-red-700 transition hover:bg-red-50"
-          >
-            Archiver ce joueur
-          </button>
-        </form>
+      {activeTab === "admin" && canManage && !player.is_archived && (
+        <section className="space-y-4">
+          <InfoBanner title="Zone sensible">
+            L&apos;archivage retire le joueur des listes actives sans supprimer
+            l&apos;historique.
+          </InfoBanner>
+          <form action={archivePlayer}>
+            <input type="hidden" name="player_id" value={player.id} />
+            <button
+              type="submit"
+              className="rounded-full border border-red-300 px-5 py-2 text-sm text-red-700 transition hover:bg-red-50"
+            >
+              Archiver ce joueur
+            </button>
+          </form>
+        </section>
       )}
     </DashboardShell>
   );

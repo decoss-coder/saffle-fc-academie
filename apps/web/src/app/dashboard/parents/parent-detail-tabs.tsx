@@ -5,18 +5,27 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 type ParentDetailTabsProps = {
   parentKey: string;
-  activeTab: "enfants" | "paiements" | "convocations" | "documents" | "acces";
+  activeTab:
+    | "enfants"
+    | "paiements"
+    | "convocations"
+    | "documents"
+    | "acces"
+    | "fiche";
+  showFicheTab?: boolean;
 };
 
 export function ParentDetailTabs({
   parentKey,
   activeTab,
+  showFicheTab = false,
 }: ParentDetailTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const basePath = `/dashboard/parents/${parentKey}`;
 
   const tabs: { key: ParentDetailTabsProps["activeTab"]; label: string }[] = [
+    ...(showFicheTab ? [{ key: "fiche" as const, label: "Fiche" }] : []),
     { key: "enfants", label: "Enfants" },
     { key: "paiements", label: "Paiements" },
     { key: "convocations", label: "Convocations" },

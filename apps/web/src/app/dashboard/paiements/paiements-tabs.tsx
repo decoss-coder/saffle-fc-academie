@@ -4,11 +4,16 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 type PaiementsTabsProps = {
-  activeTab: "suivi" | "creer" | "historique";
+  activeTab: "suivi" | "wave" | "creer" | "historique";
   canManage?: boolean;
+  pendingWaveCount?: number;
 };
 
-export function PaiementsTabs({ activeTab, canManage = true }: PaiementsTabsProps) {
+export function PaiementsTabs({
+  activeTab,
+  canManage = true,
+  pendingWaveCount = 0,
+}: PaiementsTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -29,8 +34,24 @@ export function PaiementsTabs({ activeTab, canManage = true }: PaiementsTabsProp
   return (
     <nav className="flex flex-wrap gap-2" aria-label="Paiements">
       <Link href={buildHref("suivi")} className={tabClass("suivi")}>
-        Suivi
+        Cotisations
       </Link>
+      {canManage && (
+        <Link href={buildHref("wave")} className={tabClass("wave")}>
+          Wave
+          {pendingWaveCount > 0 && (
+            <span
+              className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                activeTab === "wave"
+                  ? "bg-green-700 text-green-100"
+                  : "bg-amber-100 text-amber-900"
+              }`}
+            >
+              {pendingWaveCount}
+            </span>
+          )}
+        </Link>
+      )}
       {canManage && (
         <Link href={buildHref("creer")} className={tabClass("creer")}>
           Créer

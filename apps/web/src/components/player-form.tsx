@@ -215,7 +215,7 @@ export function PlayerForm({
           <p className="sm:col-span-2 text-sm text-slate-600">
             Numéro du parent ou tuteur. S&apos;il appartient déjà à un membre
             staff (admin, coach…), l&apos;enfant sera lié à son compte existant
-            — le menu <strong>Famille</strong> apparaîtra après connexion.
+            — le menu <strong>Parent</strong> apparaîtra après connexion.
             Sinon, activation sur <strong>/activer</strong>.
           </p>
           <Field

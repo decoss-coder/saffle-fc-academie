@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   DashboardShell,
   requireUser,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/convocations/constants";
 import { respondConvocation } from "@/app/dashboard/convocations/actions";
 import { ConvocationResponseForm } from "@/components/convocation-response-form";
+import { ParentTabs } from "@/components/parent-tabs";
 import { redirect } from "next/navigation";
 import { unwrapRelation } from "@/lib/supabase/relation";
 import { EmptyState } from "@/components/empty-state";
@@ -49,12 +51,16 @@ export default async function ParentConvocationsPage() {
     <DashboardShell
       title="Convocations"
       breadcrumbs={[
-        { label: "Famille", href: "/dashboard" },
+        { label: "Parent", href: "/dashboard/parent" },
         { label: "Convocations" },
       ]}
       userName={profile.full_name || user.email || "Utilisateur"}
       userRole={profile.role}
     >
+      <Suspense fallback={<div className="h-10" />}>
+        <ParentTabs activeTab="convocations" />
+      </Suspense>
+
       {!sorted.length ? (
         <EmptyState message="Aucune convocation pour le moment." />
       ) : (

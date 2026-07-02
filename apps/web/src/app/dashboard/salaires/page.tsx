@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { DashboardShell } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/empty-state";
@@ -24,13 +25,15 @@ import {
   MarkPaidForm,
   SalaryLineForm,
 } from "./salary-line-form";
+import { SalairesTabs } from "./salaires-tabs";
 
 export default async function SalairesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; status?: string }>;
+  searchParams: Promise<{ month?: string; status?: string; tab?: string }>;
 }) {
   const params = await searchParams;
+  const activeTab = params.tab === "creer" ? "creer" : "liste";
   const { profile } = await requireSalaryViewer();
   const canManage = canManageSalaries(profile.role);
   const supabase = await createClient();
@@ -68,15 +71,19 @@ export default async function SalairesPage({
         enregistrer les paiements ; les administrateurs consultent en lecture seule.
       </InfoBanner>
 
-      {canManage && (
+      <Suspense fallback={<div className="h-10" />}>
+        <SalairesTabs activeTab={activeTab} canManage={canManage} />
+      </Suspense>
+
+      {activeTab === "creer" && canManage ? (
         <SalaryLineForm
           coaches={(coaches ?? []).map((c) => ({
             phone: c.phone_normalized,
             label: `${c.full_name ?? "—"}${c.position_title ? ` — ${c.position_title}` : ""}`,
           }))}
         />
-      )}
-
+      ) : (
+        <>
       <div className="flex flex-wrap gap-2 text-sm">
         <a href="/dashboard/salaires" className="rounded-full border border-green-300 px-3 py-1">
           Tous
@@ -148,6 +155,8 @@ export default async function SalairesPage({
             })}
           </DataTableBody>
         </DataTable>
+      )}
+        </>
       )}
     </DashboardShell>
   );
